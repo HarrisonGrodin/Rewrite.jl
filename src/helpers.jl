@@ -2,7 +2,7 @@ export tree
 export head, children
 
 
-tree(t::Term) = t.term
+tree(t::Term) = t.tree
 
 head(t::Tree) = t.head
 head(t::Term) = head(tree(t))

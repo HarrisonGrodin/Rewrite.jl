@@ -35,7 +35,7 @@ end
 
 
 struct Term{T}
-    term::Tree
+    tree::Tree
     set::TermSet{T}
 end
 (ts::TermSet)(ex)  = Term(expr_to_term(ts, ex), ts)
