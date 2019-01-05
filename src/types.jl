@@ -2,21 +2,16 @@ export Variable, TermSet, Term
 
 
 const VARIABLE_COUNTER = Ref{UInt64}(0)
-struct Variable{V}
+struct Variable
     id::UInt64
-    data::V
-
-    Variable{T}(data) where {T} = new{T}((VARIABLE_COUNTER[] += 1), data)
+    Variable() = new(VARIABLE_COUNTER[] += 1)
 end
-Variable(x::T) where {T} = Variable{T}(x)
-Base.:(==)(x::Variable, y::Variable) = x.id === y.id
 
 
-struct TermSet{V,T}
+struct TermSet{T}
     pool::Vector{T}
-    vars::Vector{Variable{V}}
-
-    TermSet{V,T}() where {V,T} = new(T[], Variable{V}[])
+    vars::Vector{Variable}
+    TermSet{T}() where {T} = new{T}(T[], Variable[])
 end
 Base.broadcastable(ts::TermSet) = Ref(ts)
 function Base.getindex(ts::TermSet, x::Node)
@@ -25,9 +20,9 @@ function Base.getindex(ts::TermSet, x::Node)
 end
 
 
-struct Term{V,T}
+struct Term{T}
     term::TermTree
-    set::TermSet{V,T}
+    set::TermSet{T}
 end
 (ts::TermSet)(ex)  = Term(expr_to_term(ts, ex), ts)
 Base.Expr(t::Term) = term_to_expr(t)
