@@ -40,9 +40,8 @@ end
         nothing
     end
     function test_tree(ts, x, t)
-        @test head(t) === :POOL
-        @test length(children(t)) == 1
-        @test ts[children(t)[1]] == x
+        @test ts[head(t)] === x
+        @test isempty(children(t))
         nothing
     end
 
