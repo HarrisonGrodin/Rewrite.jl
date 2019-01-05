@@ -17,8 +17,4 @@ function term_to_expr(ts::TermSet, t::TermTree)
     isempty(children) && return node
     Expr(:call, node, children...)
 end
-function term_to_expr(ts::TermSet, x::Node)
-    x.kind === VARIABLE && return ts.vars[x.index]
-    x.kind === CONSTANT && return ts.pool[x.index]
-    throw(ArgumentError("invalid kind: $(x.kind)"))
-end
+term_to_expr(ts::TermSet, x::Node) = ts[x]

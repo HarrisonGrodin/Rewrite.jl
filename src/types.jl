@@ -19,6 +19,11 @@ struct TermSet{V,T}
     TermSet{V,T}() where {V,T} = new(T[], Variable{V}[])
 end
 Base.broadcastable(ts::TermSet) = Ref(ts)
+function Base.getindex(ts::TermSet, x::Node)
+    x.kind === VARIABLE && return ts.vars[x.index]
+    x.kind === CONSTANT && return ts.pool[x.index]
+    throw(ArgumentError("invalid kind: $(x.kind)"))
+end
 
 
 struct Term{V,T}

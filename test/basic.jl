@@ -34,10 +34,31 @@ using Test
             @test TermA(:(x + 2y)) ≠ TermB(:(x + 2y))
         end
 
-        exprs = [7, x, :(x + 2y), :(f(x, g(y, z), h(g))), :f, :(f())]
-        @testset "inverse: $expr" for expr ∈ exprs
-            @test Expr(TermA(expr)) == expr
+        function test_tree(ts, ex::Expr, t)
+            @assert ex.head === :call
+
+            ex_args = ex.args[2:end]
+            t_children = children(t)
+
+            @test ts[root(t)] == ex.args[1]
+            @test length(ex_args) == length(t_children)
+
+            test_tree.(ts, ex_args, t_children)
+            nothing
         end
+        function test_tree(ts, x, t)
+            @test ts[root(t)] == x
+            @test isempty(children(t))
+            nothing
+        end
+
+        exprs = [7, x, :(x + 2y), :(f(x, g(y, z), h(g))), :f, :(f())]
+        @testset for expr ∈ exprs
+            term = TermA(expr)
+            @test Expr(term) == expr
+            test_tree(TermA, expr, term)
+        end
+
     end
 
 end
