@@ -24,6 +24,6 @@ struct Term{T}
     set::TermSet{T}
 end
 (ts::TermSet)(ex)  = Term(expr_to_term(ts, ex), ts)
-Base.Expr(t::Term) = term_to_expr(t)
+Base.convert(::Type{Expr}, t::Term) = term_to_expr(t)
 
-Base.:(==)(s::Term, t::Term) = s.set === t.set && Expr(s) == Expr(t)
+Base.:(==)(s::Term, t::Term) = s.set === t.set && convert(Expr, s) == convert(Expr, t)

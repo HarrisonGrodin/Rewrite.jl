@@ -60,7 +60,7 @@ using Test
         ]
         @testset for expr ∈ exprs
             term = TermA(expr)
-            @test Expr(term) == expr
+            @test convert(Expr, term) == expr
             test_tree(TermA, expr, term)
         end
 
