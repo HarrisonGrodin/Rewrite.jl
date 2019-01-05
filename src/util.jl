@@ -1,7 +1,7 @@
 expr_to_term(ts::TermSet, ex::Expr)    = TermTree(ex.head, expr_to_term.(ts, ex.args))
 expr_to_term(ts::TermSet, x)           = TermTree(:POOL, [expr_to_node(ts, x)])
 
-expr_to_node(ts::TermSet, x::Variable) = Node(VARIABLE, length(push!(ts.vars, x)))
+expr_to_node(ts::TermSet, x::Variable) = Node(VARIABLE, x.id)
 expr_to_node(ts::TermSet, x)           = Node(CONSTANT, length(push!(ts.pool, x)))
 
 
