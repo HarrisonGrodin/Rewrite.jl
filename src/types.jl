@@ -26,7 +26,7 @@ Variable() = Variable(VARIABLE_COUNTER[] += 1)
 struct TermSet{T}
     insert::Dict{T,Index}
     lookup::Dict{Index,T}
-    count::Ref{Index}
+    count::Base.RefValue{Index}
     TermSet{T}() where {T} = new{T}(Dict{T,Index}(), Dict{Index,T}(), Ref{Index}(0))
 end
 Base.broadcastable(ts::TermSet) = Ref(ts)
