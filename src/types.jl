@@ -27,7 +27,7 @@ struct TermSet{T}
     insert::Dict{T,Index}
     lookup::Dict{Index,T}
     count::Base.RefValue{Index}
-    TermSet{T}() where {T} = new{T}(Dict{T,Index}(), Dict{Index,T}(), Ref{Index}(0))
+    TermSet{T}() where {T} = new{T}(Dict{T,Index}(), Dict{Index,T}(), Ref(zero(Index)))
 end
 Base.broadcastable(ts::TermSet) = Ref(ts)
 function Base.getindex(ts::TermSet, x::Node)
