@@ -67,6 +67,8 @@ using Test
             test_tree(TermA, expr, term)
         end
 
+        @test_throws MethodError TermA(:(x * "a"))
+
     end
 
 end
