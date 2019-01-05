@@ -10,10 +10,12 @@ struct Node
     index::Index
 end
 
-struct Tree
+struct Branch
     head::Symbol
-    args::Vector{Union{Node, Tree}}
+    args::Vector{Union{Node, Branch}}
 end
+
+const Tree = Union{Node, Branch}
 
 
 const VARIABLE_COUNTER = Ref{Index}(0)
@@ -44,7 +46,7 @@ end
 
 
 struct Term{T}
-    tree::Union{Node, Tree}
+    tree::Tree
     set::TermSet{T}
 end
 (ts::TermSet)(ex) = Term(expr_to_tree(ts, ex), ts)
