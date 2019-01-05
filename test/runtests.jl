@@ -1,2 +1,1 @@
-using Terms
-using Test
+include("basic.jl")
