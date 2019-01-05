@@ -52,7 +52,7 @@ using Test
             nothing
         end
 
-        exprs = [7, x, :(x + 2y), :(f(x, g(y, z), h(g))), :f, :(f())]
+        exprs = [7, x, :(x + 2y), :(f(x, g(y, z), h(g))), :f, :(f()), :(identity(-)(5, 3))]
         @testset for expr ∈ exprs
             term = TermA(expr)
             @test Expr(term) == expr
