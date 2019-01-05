@@ -1,11 +1,11 @@
 export tree
-export root, children
+export head, children
 
 
 tree(t::Term) = t.term
 
-root(t::Tree) = t.f
-root(t::Term) = root(tree(t))
+head(t::Tree) = t.head
+head(t::Term) = head(tree(t))
 
 children(t::Tree) = t.args
 children(t::Term) = children(tree(t))

@@ -35,24 +35,32 @@ using Test
         end
 
         function test_tree(ts, ex::Expr, t)
-            @assert ex.head === :call
+            @test head(t) === ex.head
 
-            ex_args = ex.args[2:end]
-            t_children = children(t)
+            ex_args = ex.args
+            t_args = children(t)
+            @test length(ex_args) == length(t_args)
 
-            @test ts[root(t)] == ex.args[1]
-            @test length(ex_args) == length(t_children)
-
-            test_tree.(ts, ex_args, t_children)
+            test_tree.(ts, ex_args, t_args)
             nothing
         end
         function test_tree(ts, x, t)
-            @test ts[root(t)] == x
-            @test isempty(children(t))
+            @test head(t) === :POOL
+            @test length(children(t)) == 1
+            @test ts[children(t)[1]] == x
             nothing
         end
 
-        exprs = [7, x, :(x + 2y), :(f(x, g(y, z), h(g))), :f, :(f()), :(identity(-)(5, 3))]
+        exprs = [
+            7,
+            x,
+            :(x + 2y),
+            :(f(x, g(y, z), h(g))),
+            :f,
+            :(f()),
+            :(identity(-)(5, 3)),
+            :(a ? b : c),
+        ]
         @testset for expr ∈ exprs
             term = TermA(expr)
             @test Expr(term) == expr

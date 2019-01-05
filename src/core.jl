@@ -1,6 +1,6 @@
 struct Tree{T}
-    f::T
-    args::Vector{Tree{T}}
+    head::Symbol
+    args::Vector{Union{T, Tree{T}}}
 end
 
 
