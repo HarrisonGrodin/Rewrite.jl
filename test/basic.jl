@@ -34,7 +34,7 @@ using Test
             @test TermA(:(x + 2y)) ≠ TermB(:(x + 2y))
         end
 
-        exprs = [7, x, :(x + 2y), :(f(x, g(y, z), h(g)))]
+        exprs = [7, x, :(x + 2y), :(f(x, g(y, z), h(g))), :f, :(f())]
         @testset "inverse: $expr" for expr ∈ exprs
             @test Expr(TermA(expr)) == expr
         end
