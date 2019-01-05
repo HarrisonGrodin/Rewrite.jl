@@ -1,7 +1,7 @@
 export Variable, TermSet, Term
 
 
-const Index = UInt64
+const Index = UInt32
 
 
 @enum Kind::UInt8 VARIABLE CONSTANT
