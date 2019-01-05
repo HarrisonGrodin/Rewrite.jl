@@ -9,15 +9,15 @@ using Test
 end
 
 @testset "TermSet" begin
-    TermA = TermSet{Union{Symbol, Int}}()
-    TermB = TermSet{Union{Symbol, Int}}()
+    TermA = TermBuilder{Union{Symbol, Int}}()
+    TermB = TermBuilder{Union{Symbol, Int}}()
     @test TermA == TermA
     @test TermB == TermB
     @test TermA ≠ TermB
 end
 
 @testset "Term" begin
-    TermA = TermSet{Union{Symbol, Int}}()
+    TermA = TermBuilder{Union{Symbol, Int}}()
     x = Variable()
 
     @test TermA(:(x + 2y)) == TermA(:(x + 2y))
@@ -25,22 +25,22 @@ end
     @test TermA(:(x + 2y)) ≠ TermA(:(x + 2z))
     @test TermA(:(x + 2y)) ≠ TermA(:($x + 2y))
 
-    let TermB = TermSet{Union{Symbol, Int}}()
+    let TermB = TermBuilder{Union{Symbol, Int}}()
         @test TermA(:(x + 2y)) ≠ TermB(:(x + 2y))
     end
 
-    function test_tree(ts, ex::Expr, t)
+    function test_tree(b, ex::Expr, t)
         @test head(t) === ex.head
 
         ex_args = ex.args
         t_args = children(t)
         @test length(ex_args) == length(t_args)
 
-        test_tree.(ts, ex_args, t_args)
+        test_tree.(b, ex_args, t_args)
         nothing
     end
-    function test_tree(ts, x, t)
-        @test ts[head(t)] === x
+    function test_tree(b, x, t)
+        @test b[head(t)] === x
         @test isempty(children(t))
         nothing
     end

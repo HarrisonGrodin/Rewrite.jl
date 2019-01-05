@@ -1,4 +1,4 @@
-export Variable, TermSet, Term
+export Variable, TermBuilder, Term
 
 
 const Index = UInt32
@@ -25,31 +25,31 @@ end
 Variable() = Variable(VARIABLE_COUNTER[] += 1)
 
 
-struct TermSet{T}
+struct TermBuilder{T}
     insert::Dict{T,Index}
     lookup::Dict{Index,T}
     count::Base.RefValue{Index}
-    TermSet{T}() where {T} = new{T}(Dict{T,Index}(), Dict{Index,T}(), Ref(zero(Index)))
+    TermBuilder{T}() where {T} = new{T}(Dict{T,Index}(), Dict{Index,T}(), Ref(zero(Index)))
 end
-Base.broadcastable(ts::TermSet) = Ref(ts)
-function Base.getindex(ts::TermSet, x::Node)
+Base.broadcastable(b::TermBuilder) = Ref(b)
+function Base.getindex(b::TermBuilder, x::Node)
     x.kind === VARIABLE && return Variable(x.index)
-    x.kind === CONSTANT && return ts.lookup[x.index]
+    x.kind === CONSTANT && return b.lookup[x.index]
 end
-function Base.push!(ts::TermSet, x)
-    haskey(ts.insert, x) && return Node(CONSTANT, ts.insert[x])
-    index = (ts.count[] += 1)
-    ts.insert[x] = index
-    ts.lookup[index] = x
+function Base.push!(b::TermBuilder, x)
+    haskey(b.insert, x) && return Node(CONSTANT, b.insert[x])
+    index = (b.count[] += 1)
+    b.insert[x] = index
+    b.lookup[index] = x
     Node(CONSTANT, index)
 end
 
 
 struct Term{T}
     tree::Tree
-    set::TermSet{T}
+    builder::TermBuilder{T}
 end
-(ts::TermSet)(ex) = Term(expr_to_tree(ts, ex), ts)
+(b::TermBuilder)(ex) = Term(expr_to_tree(b, ex), b)
 Base.convert(::Type{Expr}, t::Term) = term_to_expr(t)
 
-Base.:(==)(s::Term, t::Term) = s.set === t.set && convert(Expr, s) == convert(Expr, t)
+Base.:(==)(s::Term, t::Term) = s.builder === t.builder && convert(Expr, s) == convert(Expr, t)
