@@ -2,10 +2,12 @@ export tree
 export head, children
 
 
-tree(t::Term) = t.tree
+@inline tree(t::Term) = t.tree
 
-head(t::Tree) = t.head === :POOL ? (@inbounds t.args[1]) : t.head
-head(t::Term) = head(tree(t))
+@inline head(x::Node) = x
+@inline head(t::Tree) = t.head
+@inline head(t::Term) = head(tree(t))
 
-children(t::Tree) = t.head === :POOL ? (@inbounds t.args[2:end]) : t.args
-children(t::Term) = children(tree(t))
+@inline children(x::Node) = Union{Node, Tree}[]
+@inline children(t::Tree) = t.args
+@inline children(t::Term) = children(tree(t))

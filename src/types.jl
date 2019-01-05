@@ -44,10 +44,10 @@ end
 
 
 struct Term{T}
-    tree::Tree
+    tree::Union{Node, Tree}
     set::TermSet{T}
 end
-(ts::TermSet)(ex) = Term(expr_to_term(ts, ex), ts)
+(ts::TermSet)(ex) = Term(expr_to_tree(ts, ex), ts)
 Base.convert(::Type{Expr}, t::Term) = term_to_expr(t)
 
 Base.:(==)(s::Term, t::Term) = s.set === t.set && convert(Expr, s) == convert(Expr, t)
