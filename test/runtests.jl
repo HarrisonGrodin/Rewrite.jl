@@ -1,1 +1,3 @@
-include("basic.jl")
+using Test
+
+@testset "Basic" begin include("basic.jl") end
