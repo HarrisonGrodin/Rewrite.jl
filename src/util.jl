@@ -1,12 +1,12 @@
-expr_to_term(ts::TermSet, ex::Expr)    = TermTree(ex.head, expr_to_term.(ts, ex.args))
-expr_to_term(ts::TermSet, x)           = TermTree(:POOL, [expr_to_node(ts, x)])
+expr_to_term(ts::TermSet, ex::Expr)    = Tree(ex.head, expr_to_term.(ts, ex.args))
+expr_to_term(ts::TermSet, x)           = Tree(:POOL, [expr_to_node(ts, x)])
 
 expr_to_node(ts::TermSet, x::Variable) = Node(VARIABLE, x.id)
 expr_to_node(ts::TermSet, x)           = Node(CONSTANT, length(push!(ts.pool, x)))
 
 
 term_to_expr(t::Term) = term_to_expr(t.set, t.term)
-function term_to_expr(ts::TermSet, t::TermTree)
+function term_to_expr(ts::TermSet, t::Tree)
     args = term_to_expr.(ts, children(t))
 
     _head = head(t)

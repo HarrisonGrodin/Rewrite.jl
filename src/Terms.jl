@@ -1,6 +1,5 @@
 module Terms
 
-include("core.jl")
 include("types.jl")
 
 include("helpers.jl")

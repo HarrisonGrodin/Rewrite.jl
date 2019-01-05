@@ -1,9 +1,24 @@
 export Variable, TermSet, Term
 
 
-const VARIABLE_COUNTER = Ref{UInt64}(0)
+const Index = UInt64
+
+
+@enum Kind::UInt8 VARIABLE CONSTANT
+struct Node
+    kind::Kind
+    index::Index
+end
+
+struct Tree
+    head::Symbol
+    args::Vector{Union{Node, Tree}}
+end
+
+
+const VARIABLE_COUNTER = Ref{Index}(0)
 struct Variable
-    id::UInt64
+    id::Index
 end
 Variable() = Variable(VARIABLE_COUNTER[] += 1)
 
@@ -20,7 +35,7 @@ end
 
 
 struct Term{T}
-    term::TermTree
+    term::Tree
     set::TermSet{T}
 end
 (ts::TermSet)(ex)  = Term(expr_to_term(ts, ex), ts)
