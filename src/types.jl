@@ -14,17 +14,17 @@ const Tree = Union{Node, Variable}
 
 
 struct Pool{T}
-    insert::Dict{T,UInt}
-    lookup::Dict{UInt,T}
-    count::Base.RefValue{UInt}
-    Pool{T}() where {T} = new{T}(Dict{T,UInt}(), Dict{UInt,T}(), Ref(zero(UInt)))
+    ids::Dict{T,UInt}
+    lookup::Vector{T}
+    Pool{T}() where {T} = new{T}(Dict{T,UInt}(), T[])
 end
 Base.broadcastable(p::Pool) = Ref(p)
 function Base.push!(p::Pool, x)
-    haskey(p.insert, x) && return p.insert[x]
-    index = (p.count[] += one(UInt))
-    p.insert[x] = index
-    p.lookup[index] = x
+    haskey(p.ids, x) && return p.ids[x]
+
+    push!(p.lookup, x)
+    index = UInt(length(p.lookup))
+    p.ids[x] = index
     return index
 end
 Base.getindex(p::Pool, index::UInt) = p.lookup[index]
