@@ -40,7 +40,7 @@ end
         nothing
     end
     function test_tree(b, x, t)
-        @test b[head(t)] === x
+        @test head(t) === x
         @test isempty(children(t))
         nothing
     end

@@ -32,10 +32,6 @@ struct TermBuilder{T}
     TermBuilder{T}() where {T} = new{T}(Dict{T,Index}(), Dict{Index,T}(), Ref(zero(Index)))
 end
 Base.broadcastable(b::TermBuilder) = Ref(b)
-function Base.getindex(b::TermBuilder, x::Leaf)
-    x.kind === VARIABLE && return Variable(x.index)
-    x.kind === CONSTANT && return b.lookup[x.index]
-end
 function Base.push!(b::TermBuilder, x)
     haskey(b.insert, x) && return Leaf(CONSTANT, b.insert[x])
     index = (b.count[] += 1)

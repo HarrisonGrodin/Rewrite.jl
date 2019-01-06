@@ -1,3 +1,10 @@
+is_leaf(::Leaf) = true
+is_leaf(::Any) = false
+
+is_branch(::Branch) = true
+is_branch(::Any) = false
+
+
 function expr_to_tree(b::TermBuilder, ex::Expr)
     args = similar(ex.args, Tree)
     for i ∈ eachindex(ex.args)
@@ -15,4 +22,7 @@ function term_to_expr(b::TermBuilder, t::Branch)
     append!(expr.args, term_to_expr.(b, t.args))
     expr
 end
-term_to_expr(b::TermBuilder, x::Leaf) = b[x]
+function term_to_expr(b::TermBuilder, x::Leaf)
+    x.kind === VARIABLE && return Variable(x.index)
+    return b.lookup[x.index]
+end
