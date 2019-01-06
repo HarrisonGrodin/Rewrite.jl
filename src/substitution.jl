@@ -17,8 +17,10 @@ Base.broadcastable(σ::Substitution) = Ref(σ)
 
 
 Base.replace(t::Term, σ::AbstractDict) = Term(replace(t.tree, σ), t.builder)
-Base.replace(t::Node, σ::AbstractDict) = Node(t.head, replace.(t.args, σ))
-Base.replace(t::Variable, σ::AbstractDict) = get(σ, t, t)
+function Base.replace(t::Tree, σ::AbstractDict)
+    isa(t, Variable) && return get(σ, t, t)
+    Node(t.head, replace.(t.args, σ))
+end
 
 
 """
