@@ -19,9 +19,9 @@ function expr_to_tree(b::TermBuilder, ex::Expr)
     for i ∈ eachindex(ex.args)
         args[i] = expr_to_tree(b, ex.args[i])
     end
-    Node(ex.head, args)
+    return Node(ex.head, args)
 end
-expr_to_tree(b::TermBuilder, x)           = Node(push!(b, x), Tree[])
+expr_to_tree(b::TermBuilder, x) = Node(push!(b, x), Tree[])
 expr_to_tree(::TermBuilder, x::Variable) = x
 
 
