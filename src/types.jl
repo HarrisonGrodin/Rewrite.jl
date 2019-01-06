@@ -14,6 +14,7 @@ struct Branch
     head::Symbol
     args::Vector{Union{Leaf, Branch}}
 end
+Base.:(==)(s::Branch, t::Branch) = (s.head, s.args) == (t.head, t.args)
 
 const Tree = Union{Leaf, Branch}
 
