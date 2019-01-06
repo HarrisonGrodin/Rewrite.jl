@@ -3,11 +3,8 @@ export Variable, TermBuilder, Term
 
 const Index = UInt32
 
-const VARIABLE_COUNTER = Ref{Index}(0)
-struct Variable
-    id::Index
-end
-Variable() = Variable(VARIABLE_COUNTER[] += 1)
+
+mutable struct Variable end
 
 
 struct Node
