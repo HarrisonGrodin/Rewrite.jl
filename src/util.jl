@@ -27,7 +27,7 @@ expr_to_tree(::TermBuilder, x::Variable) = x
 
 term_to_expr(t::Term) = term_to_expr(t.builder, t.tree)
 function term_to_expr(b::TermBuilder, t::Node)
-    isa(t.head, Index) && return b[t.head]
+    isa(t.head, UInt) && return b[t.head]
 
     expr = Expr(t.head)
     append!(expr.args, term_to_expr.(b, t.args))
