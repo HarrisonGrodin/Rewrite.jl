@@ -1,7 +1,7 @@
 function expr_to_tree(b::TermBuilder, ex::Expr)
     args = similar(ex.args, Tree)
-    @simd for i ∈ eachindex(ex.args)
-        @inbounds args[i] = expr_to_tree(b, ex.args[i])
+    for i ∈ eachindex(ex.args)
+        args[i] = expr_to_tree(b, ex.args[i])
     end
     Branch(ex.head, args)
 end
