@@ -5,7 +5,7 @@ function expr_to_tree(b::TermBuilder, ex::Expr)
     end
     Branch(ex.head, args)
 end
-expr_to_tree(b::TermBuilder, x::Variable) = Node(VARIABLE, x.id)
+expr_to_tree(b::TermBuilder, x::Variable) = Leaf(VARIABLE, x.id)
 expr_to_tree(b::TermBuilder, x)           = push!(b, x)
 
 
@@ -15,4 +15,4 @@ function term_to_expr(b::TermBuilder, t::Branch)
     append!(expr.args, term_to_expr.(b, t.args))
     expr
 end
-term_to_expr(b::TermBuilder, x::Node) = b[x]
+term_to_expr(b::TermBuilder, x::Leaf) = b[x]

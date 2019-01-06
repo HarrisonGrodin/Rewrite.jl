@@ -5,17 +5,17 @@ const Index = UInt32
 
 
 @enum Kind::UInt8 VARIABLE CONSTANT
-struct Node
+struct Leaf
     kind::Kind
     index::Index
 end
 
 struct Branch
     head::Symbol
-    args::Vector{Union{Node, Branch}}
+    args::Vector{Union{Leaf, Branch}}
 end
 
-const Tree = Union{Node, Branch}
+const Tree = Union{Leaf, Branch}
 
 
 const VARIABLE_COUNTER = Ref{Index}(0)
@@ -32,16 +32,16 @@ struct TermBuilder{T}
     TermBuilder{T}() where {T} = new{T}(Dict{T,Index}(), Dict{Index,T}(), Ref(zero(Index)))
 end
 Base.broadcastable(b::TermBuilder) = Ref(b)
-function Base.getindex(b::TermBuilder, x::Node)
+function Base.getindex(b::TermBuilder, x::Leaf)
     x.kind === VARIABLE && return Variable(x.index)
     x.kind === CONSTANT && return b.lookup[x.index]
 end
 function Base.push!(b::TermBuilder, x)
-    haskey(b.insert, x) && return Node(CONSTANT, b.insert[x])
+    haskey(b.insert, x) && return Leaf(CONSTANT, b.insert[x])
     index = (b.count[] += 1)
     b.insert[x] = index
     b.lookup[index] = x
-    Node(CONSTANT, index)
+    Leaf(CONSTANT, index)
 end
 
 
