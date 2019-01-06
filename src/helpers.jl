@@ -7,4 +7,4 @@ export head, children
 
 @inline children(x::Node) = Tree[]
 @inline children(t::Branch) = t.args
-@inline children(t::Term) = children(t.tree)
+@inline children(t::Term) = Term.(children(t.tree), t.builder)
