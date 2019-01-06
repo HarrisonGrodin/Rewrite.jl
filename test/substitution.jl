@@ -2,7 +2,7 @@ using Terms
 using Test
 
 
-TermA = TermBuilder{Symbol}()
+TermA = Pool{Symbol}()
 
 @testset "match" begin
     x = Variable()

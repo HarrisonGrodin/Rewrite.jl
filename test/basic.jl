@@ -8,16 +8,16 @@ using Test
     @test x ≠ y
 end
 
-@testset "TermBuilder" begin
-    TermA = TermBuilder{Union{Symbol, Int}}()
-    TermB = TermBuilder{Union{Symbol, Int}}()
+@testset "Pool" begin
+    TermA = Pool{Union{Symbol, Int}}()
+    TermB = Pool{Union{Symbol, Int}}()
     @test TermA == TermA
     @test TermB == TermB
     @test TermA ≠ TermB
 end
 
 @testset "Term" begin
-    TermA = TermBuilder{Union{Symbol, Int}}()
+    TermA = Pool{Union{Symbol, Int}}()
     x = Variable()
 
     @test TermA(:(x + 2y)) == TermA(:(x + 2y))
@@ -25,7 +25,7 @@ end
     @test TermA(:(x + 2y)) ≠ TermA(:(x + 2z))
     @test TermA(:(x + 2y)) ≠ TermA(:($x + 2y))
 
-    let TermB = TermBuilder{Union{Symbol, Int}}()
+    let TermB = Pool{Union{Symbol, Int}}()
         @test TermA(:(x + 2y)) ≠ TermB(:(x + 2y))
     end
 

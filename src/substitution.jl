@@ -16,7 +16,7 @@ Base.get(σ::Substitution, key, default) = get(σ.dict, key, default)
 Base.broadcastable(σ::Substitution) = Ref(σ)
 
 
-Base.replace(t::Term, σ::AbstractDict) = Term(replace(t.tree, σ), t.builder)
+Base.replace(t::Term, σ::AbstractDict) = Term(replace(t.tree, σ), t.pool)
 function Base.replace(t::Tree, σ::AbstractDict)
     isa(t, Variable) && return get(σ, t, t)
     Node(t.head, replace.(t.args, σ))
@@ -30,8 +30,8 @@ Syntactically match term `subject` to `pattern`, producing a `Substitution` if t
 process succeeds and `nothing` otherwise.
 """
 function Base.match(pattern::Term, subject::Term)
-    pattern.builder === subject.builder ||
-        throw(ArgumentError("pattern and subject must have same builder"))
+    pattern.pool === subject.pool ||
+        throw(ArgumentError("pattern and subject must have same pool"))
 
     _match!(Substitution(), pattern.tree, subject.tree)
 end
