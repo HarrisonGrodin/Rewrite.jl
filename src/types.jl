@@ -40,4 +40,4 @@ end
 (b::TermBuilder)(ex) = Term(expr_to_tree(b, ex), b)
 Base.convert(::Type{Expr}, t::Term) = term_to_expr(t)
 
-Base.:(==)(s::Term, t::Term) = s.builder === t.builder && convert(Expr, s) == convert(Expr, t)
+Base.:(==)(s::Term, t::Term) = s.builder === t.builder && s.tree == t.tree
