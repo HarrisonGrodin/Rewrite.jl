@@ -8,7 +8,7 @@ using Test
     @test x ≠ y
 end
 
-@testset "TermSet" begin
+@testset "TermBuilder" begin
     TermA = TermBuilder{Union{Symbol, Int}}()
     TermB = TermBuilder{Union{Symbol, Int}}()
     @test TermA == TermA

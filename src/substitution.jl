@@ -1,10 +1,10 @@
 export match
 
 
-struct Substitution <: AbstractDict{Leaf,Tree}
-    dict::Dict{Leaf,Tree}
+struct Substitution <: AbstractDict{Variable,Tree}
+    dict::Dict{Variable,Tree}
 end
-Substitution() = Substitution(Dict{Leaf,Tree}())
+Substitution() = Substitution(Dict{Variable,Tree}())
 (σ::Substitution)(t) = replace(t, σ)
 Base.length(σ::Substitution) = length(σ.dict)
 Base.iterate(σ::Substitution) = iterate(σ.dict)
@@ -17,8 +17,8 @@ Base.broadcastable(σ::Substitution) = Ref(σ)
 
 
 Base.replace(t::Term, σ::AbstractDict) = Term(replace(t.tree, σ), t.builder)
-Base.replace(t::Branch, σ::AbstractDict) = Branch(t.head, replace.(t.args, σ))
-Base.replace(t::Leaf, σ::AbstractDict) = t.kind === VARIABLE ? get(σ, t, t) : t
+Base.replace(t::Node, σ::AbstractDict) = Node(t.head, replace.(t.args, σ))
+Base.replace(t::Variable, σ::AbstractDict) = get(σ, t, t)
 
 
 """
@@ -35,29 +35,24 @@ function Base.match(pattern::Term, subject::Term)
 end
 
 function _match!(σ::Substitution, p, s)
-    if isa(p, Leaf)
-        p.kind === CONSTANT &&
-            return (isa(s, Leaf) && s.index === p.index) ? σ : nothing
-
-        # @assert p.kind === VARIABLE
+    if isa(p, Variable)
         haskey(σ, p) && σ[p] != s && return nothing
         σ[p] = s
         return σ
     end
 
-    # @assert isa(p, Branch)
-    if isa(s, Branch)
-        p.head === s.head                || return nothing
-        length(p.args) == length(s.args) || return nothing
+    isa(s, Node) || return nothing
 
-        for (x, y) ∈ zip(p.args, s.args)
-            σ′ = _match!(σ, x, y)
-            σ′ === nothing && return nothing
-            σ = σ′
-        end
+    # @assert isa(p, Node)
+    p.head === s.head                || return nothing
+    length(p.args) == length(s.args) || return nothing
 
-        return σ
+    # @assert isa(p.head, Symbol)
+    for (x, y) ∈ zip(p.args, s.args)
+        σ′ = _match!(σ, x, y)
+        σ′ === nothing && return nothing
+        σ = σ′
     end
 
-    return nothing
+    return σ
 end

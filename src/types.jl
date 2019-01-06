@@ -3,27 +3,20 @@ export Variable, TermBuilder, Term
 
 const Index = UInt32
 
-
-@enum Kind::UInt8 VARIABLE CONSTANT
-struct Leaf
-    kind::Kind
-    index::Index
-end
-
-struct Branch
-    head::Symbol
-    args::Vector{Union{Leaf, Branch}}
-end
-Base.:(==)(s::Branch, t::Branch) = (s.head, s.args) == (t.head, t.args)
-
-const Tree = Union{Leaf, Branch}
-
-
 const VARIABLE_COUNTER = Ref{Index}(0)
 struct Variable
     id::Index
 end
 Variable() = Variable(VARIABLE_COUNTER[] += 1)
+
+
+struct Node
+    head::Union{Symbol, Index}
+    args::Vector{Union{Node, Variable}}
+end
+Base.:(==)(s::Node, t::Node) = (s.head, s.args) == (t.head, t.args)
+
+const Tree = Union{Node, Variable}
 
 
 struct TermBuilder{T}
@@ -34,12 +27,13 @@ struct TermBuilder{T}
 end
 Base.broadcastable(b::TermBuilder) = Ref(b)
 function Base.push!(b::TermBuilder, x)
-    haskey(b.insert, x) && return Leaf(CONSTANT, b.insert[x])
-    index = (b.count[] += 1)
+    haskey(b.insert, x) && return b.insert[x]
+    index = (b.count[] += one(Index))
     b.insert[x] = index
     b.lookup[index] = x
-    Leaf(CONSTANT, index)
+    return index
 end
+Base.getindex(b::TermBuilder, index::Index) = b.lookup[index]
 
 
 struct Term{T}
