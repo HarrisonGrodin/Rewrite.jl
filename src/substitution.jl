@@ -34,23 +34,30 @@ function Base.match(pattern::Term, subject::Term)
     _match(Substitution(), pattern.tree, subject.tree)
 end
 
-function _match(σ::Substitution, p::Leaf, s)
-    p.kind === CONSTANT && return is_leaf(s) && s.index === p.index ? σ : nothing
+function _match(σ::Substitution, p, s)
+    if isa(p, Leaf)
+        p.kind === CONSTANT &&
+            return (isa(s, Leaf) && s.index === p.index) ? σ : nothing
 
-    @assert p.kind === VARIABLE
-    haskey(σ, p) && σ[p] != s && return nothing
-    σ[p] = s
-    return σ
-end
-function _match(σ::Substitution, p::Branch, s::Branch)
-    p.head === s.head                || return nothing
-    length(p.args) == length(s.args) || return nothing
-
-    for (x, y) ∈ zip(p.args, s.args)
-        σ = _match(σ, x, y)
-        σ === nothing && return nothing
+        # @assert p.kind === VARIABLE
+        haskey(σ, p) && σ[p] != s && return nothing
+        σ[p] = s
+        return σ
     end
 
-    σ
+    # @assert isa(p, Branch)
+    if isa(s, Branch)
+        p.head === s.head                || return nothing
+        length(p.args) == length(s.args) || return nothing
+
+        for (x, y) ∈ zip(p.args, s.args)
+            σ′ = _match(σ, x, y)
+            σ′ === nothing && return nothing
+            σ = σ′
+        end
+
+        return σ
+    end
+
+    return nothing
 end
-_match(::Substitution, ::Any, ::Any) = nothing
