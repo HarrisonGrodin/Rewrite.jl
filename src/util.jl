@@ -1,16 +1,9 @@
 export head, children
 
 
-is_leaf(::Leaf) = true
-is_leaf(::Any) = false
-
-is_branch(::Branch) = true
-is_branch(::Any) = false
-
-
 @inline head(x::Leaf) = x
 @inline head(t::Branch) = t.head
-@inline head(t::Term) = is_branch(t.tree) ? head(t.tree::Branch) : convert(Expr, t)
+@inline head(t::Term) = isa(t.tree, Branch) ? head(t.tree::Branch) : convert(Expr, t)
 
 @inline children(x::Leaf) = Tree[]
 @inline children(t::Branch) = t.args
