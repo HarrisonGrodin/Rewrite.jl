@@ -31,10 +31,10 @@ function Base.match(pattern::Term, subject::Term)
     pattern.builder === subject.builder ||
         throw(ArgumentError("pattern and subject must have same builder"))
 
-    _match(Substitution(), pattern.tree, subject.tree)
+    _match!(Substitution(), pattern.tree, subject.tree)
 end
 
-function _match(σ::Substitution, p, s)
+function _match!(σ::Substitution, p, s)
     if isa(p, Leaf)
         p.kind === CONSTANT &&
             return (isa(s, Leaf) && s.index === p.index) ? σ : nothing
@@ -51,7 +51,7 @@ function _match(σ::Substitution, p, s)
         length(p.args) == length(s.args) || return nothing
 
         for (x, y) ∈ zip(p.args, s.args)
-            σ′ = _match(σ, x, y)
+            σ′ = _match!(σ, x, y)
             σ′ === nothing && return nothing
             σ = σ′
         end
