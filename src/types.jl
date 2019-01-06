@@ -1,4 +1,4 @@
-export Variable, TermBuilder, Term
+export Variable, Pool, Term
 
 
 mutable struct Variable end
@@ -13,28 +13,28 @@ Base.:(==)(s::Node, t::Node) = (s.head, s.args) == (t.head, t.args)
 const Tree = Union{Node, Variable}
 
 
-struct TermBuilder{T}
-    insert::Dict{T,UInt}
-    lookup::Dict{UInt,T}
-    count::Base.RefValue{UInt}
-    TermBuilder{T}() where {T} = new{T}(Dict{T,UInt}(), Dict{UInt,T}(), Ref(zero(UInt)))
+struct Pool{T}
+    ids::Dict{T,UInt}
+    lookup::Vector{T}
+    Pool{T}() where {T} = new{T}(Dict{T,UInt}(), T[])
 end
-Base.broadcastable(b::TermBuilder) = Ref(b)
-function Base.push!(b::TermBuilder, x)
-    haskey(b.insert, x) && return b.insert[x]
-    index = (b.count[] += one(UInt))
-    b.insert[x] = index
-    b.lookup[index] = x
+Base.broadcastable(p::Pool) = Ref(p)
+function Base.push!(p::Pool, x)
+    haskey(p.ids, x) && return p.ids[x]
+
+    push!(p.lookup, x)
+    index = UInt(length(p.lookup))
+    p.ids[x] = index
     return index
 end
-Base.getindex(b::TermBuilder, index::UInt) = b.lookup[index]
+Base.getindex(p::Pool, index::UInt) = p.lookup[index]
 
 
 struct Term{T}
     tree::Tree
-    builder::TermBuilder{T}
+    pool::Pool{T}
 end
-(b::TermBuilder)(ex) = Term(expr_to_tree(b, ex), b)
+(p::Pool)(ex) = Term(expr_to_tree(p, ex), p)
 Base.convert(::Type{Expr}, t::Term) = term_to_expr(t)
 
-Base.:(==)(s::Term, t::Term) = s.builder === t.builder && s.tree == t.tree
+Base.:(==)(s::Term, t::Term) = s.pool === t.pool && s.tree == t.tree
