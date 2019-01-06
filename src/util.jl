@@ -1,33 +1,39 @@
 export head, children
 
 
-@inline head(x::Leaf) = x
-@inline head(t::Branch) = t.head
-@inline head(t::Term) = isa(t.tree, Branch) ? head(t.tree::Branch) : convert(Expr, t)
+@inline head(t::Tree) = isa(t, Variable) ? t : t.head
+@inline function head(t::Term)
+    isa(t.tree, Variable) && return t.tree
 
-@inline children(x::Leaf) = Tree[]
-@inline children(t::Branch) = t.args
+    _head = head(t.tree::Node)
+    return isa(_head, Symbol) ? _head : t.builder[_head]
+end
+
+@inline children(t::Tree) = isa(t, Node) ? t.args : Tree[]
 @inline children(t::Term) = Term.(children(t.tree), t.builder)
 
 
-function expr_to_tree(b::TermBuilder, ex::Expr)
-    args = similar(ex.args, Tree)
-    for i ∈ eachindex(ex.args)
-        args[i] = expr_to_tree(b, ex.args[i])
+function expr_to_tree(b::TermBuilder, x)::Tree
+    isa(x, Variable) && return x
+
+    if isa(x, Expr)
+        args = similar(x.args, Tree)
+        for i ∈ eachindex(x.args)
+            args[i] = expr_to_tree(b, x.args[i])
+        end
+        return Node(x.head, args)
     end
-    Branch(ex.head, args)
+
+    return Node(push!(b, x), Tree[])
 end
-expr_to_tree(b::TermBuilder, x::Variable) = Leaf(VARIABLE, x.id)
-expr_to_tree(b::TermBuilder, x)           = push!(b, x)
 
 
 term_to_expr(t::Term) = term_to_expr(t.builder, t.tree)
-function term_to_expr(b::TermBuilder, t::Branch)
+function term_to_expr(b::TermBuilder, t::Tree)
+    isa(t, Variable) && return t
+    isa(t.head, UInt) && return b[t.head]
+
     expr = Expr(t.head)
     append!(expr.args, term_to_expr.(b, t.args))
-    expr
-end
-function term_to_expr(b::TermBuilder, x::Leaf)
-    x.kind === VARIABLE && return Variable(x.index)
-    return b.lookup[x.index]
+    return expr
 end

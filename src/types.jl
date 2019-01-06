@@ -1,45 +1,33 @@
 export Variable, TermBuilder, Term
 
 
-const Index = UInt32
+mutable struct Variable end
 
 
-@enum Kind::UInt8 VARIABLE CONSTANT
-struct Leaf
-    kind::Kind
-    index::Index
+struct Node
+    head::Union{Symbol, UInt}
+    args::Vector{Union{Node, Variable}}
 end
+Base.:(==)(s::Node, t::Node) = (s.head, s.args) == (t.head, t.args)
 
-struct Branch
-    head::Symbol
-    args::Vector{Union{Leaf, Branch}}
-end
-Base.:(==)(s::Branch, t::Branch) = (s.head, s.args) == (t.head, t.args)
-
-const Tree = Union{Leaf, Branch}
-
-
-const VARIABLE_COUNTER = Ref{Index}(0)
-struct Variable
-    id::Index
-end
-Variable() = Variable(VARIABLE_COUNTER[] += 1)
+const Tree = Union{Node, Variable}
 
 
 struct TermBuilder{T}
-    insert::Dict{T,Index}
-    lookup::Dict{Index,T}
-    count::Base.RefValue{Index}
-    TermBuilder{T}() where {T} = new{T}(Dict{T,Index}(), Dict{Index,T}(), Ref(zero(Index)))
+    insert::Dict{T,UInt}
+    lookup::Dict{UInt,T}
+    count::Base.RefValue{UInt}
+    TermBuilder{T}() where {T} = new{T}(Dict{T,UInt}(), Dict{UInt,T}(), Ref(zero(UInt)))
 end
 Base.broadcastable(b::TermBuilder) = Ref(b)
 function Base.push!(b::TermBuilder, x)
-    haskey(b.insert, x) && return Leaf(CONSTANT, b.insert[x])
-    index = (b.count[] += 1)
+    haskey(b.insert, x) && return b.insert[x]
+    index = (b.count[] += one(UInt))
     b.insert[x] = index
     b.lookup[index] = x
-    Leaf(CONSTANT, index)
+    return index
 end
+Base.getindex(b::TermBuilder, index::UInt) = b.lookup[index]
 
 
 struct Term{T}
@@ -49,4 +37,4 @@ end
 (b::TermBuilder)(ex) = Term(expr_to_tree(b, ex), b)
 Base.convert(::Type{Expr}, t::Term) = term_to_expr(t)
 
-Base.:(==)(s::Term, t::Term) = s.builder === t.builder && convert(Expr, s) == convert(Expr, t)
+Base.:(==)(s::Term, t::Term) = s.builder === t.builder && s.tree == t.tree
