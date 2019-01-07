@@ -1,6 +1,6 @@
 module Terms
 
-include("types.jl")
+include("term.jl")
 include("pool.jl")
 
 include("substitution.jl")
