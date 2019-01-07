@@ -22,18 +22,15 @@ end
 
     @testset "shape" begin
         function test_tree(ex::Expr, t)
-            @test head(t) === ex.head
+            @test t.head === ex.head
+            @test length(ex.args) == length(t.args)
 
-            ex_args = ex.args
-            t_args = children(t)
-            @test length(ex_args) == length(t_args)
-
-            test_tree.(ex_args, t_args)
+            test_tree.(ex.args, t.args)
             nothing
         end
         function test_tree(x, t)
-            @test head(t) === x
-            @test isempty(children(t))
+            @test t.head === x
+            @test isempty(t.args)
             nothing
         end
 

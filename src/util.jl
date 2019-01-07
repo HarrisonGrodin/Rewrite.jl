@@ -1,10 +1,3 @@
-export head, children
-
-
-@inline head(t::Term) = t.head
-@inline children(t::Term) = t.args
-
-
 function expr_to_term(f::Function, T, x)
     isa(x, Expr) || return Term{T}(f(x), Term{T}[])
 
