@@ -17,5 +17,5 @@ struct Term{T}
 end
 Base.convert(::Type{Term{T}}, ex) where {T} = Term{T}(expr_to_tree(T, ex))
 Base.convert(::Type{Term{T}}, t::Term{T}) where {T} = t
-Base.convert(::Type{Expr}, t::Term) = term_to_expr(t)
+Base.convert(::Type{Expr}, t::Term) = tree_to_expr(t.tree)
 Base.:(==)(s::Term, t::Term) = s.tree == t.tree
