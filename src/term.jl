@@ -5,6 +5,7 @@ struct Term{T}
     head::T
     args::Vector{Term{T}}
 end
+Term{T}(head) where {T} = Term{T}(head, T[])
 Term(head::T) where {T} = Term{T}(head, T[])
 Term(head::T, args::Vector{Term{U}}) where {T,U} = Term{promote_type(T,U)}(head, args)
 
