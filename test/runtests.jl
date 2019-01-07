@@ -18,6 +18,6 @@ const EXPRS = [
 ]
 
 
-@testset "Basic"        begin include("basic.jl")        end
+@testset "Term"         begin include("term.jl")         end
 @testset "Substitution" begin include("substitution.jl") end
 @testset "Pooling"      begin include("pool.jl")         end

@@ -2,7 +2,26 @@ using Terms
 using Test
 
 
-TermA = Term{Union{Symbol, Int}}
+@testset "Variable" begin
+    x = Variable()
+    y = Variable()
+
+    @testset "equality" begin
+        @test x == x
+        @test y == y
+        @test x ≠ y
+    end
+
+    @testset "promotion" begin
+        term = Term(:call, [Term(:+), Term(:a), Term(x)])
+        @test isa(term, Term{Union{Symbol, Variable}})
+        @test term.head::Symbol === :call
+        @test term.args[3].head === x
+    end
+end
+
+
+TermA = Pattern{Union{Symbol, Int}}
 
 @testset "match" begin
     x = Variable()
@@ -16,6 +35,7 @@ TermA = Term{Union{Symbol, Int}}
             σ = match(p, s)
             @test length(σ) == 1
             @test σ(p) == s
+            @test σ[x] == convert(TermA, k₁)
         end
     end
 
@@ -40,6 +60,7 @@ TermA = Term{Union{Symbol, Int}}
             σ = match(p, s)
             @test length(σ) == 1
             @test σ(p) == s
+            @test σ[x] == convert(TermA, k₁)
         end
         @test match(p, convert(TermA, :(a + b))) === nothing
         @test match(p, convert(TermA, :(a - k))) === nothing
@@ -54,6 +75,8 @@ TermA = Term{Union{Symbol, Int}}
             σ = match(p, s)
             @test length(σ) == 2
             @test σ(p) == s
+            @test σ[x] == convert(TermA, k₁)
+            @test σ[y] == convert(TermA, k₂)
         end
         @test match(p, convert(TermA, :(f(a) + b))) === nothing
     end
@@ -66,6 +89,7 @@ TermA = Term{Union{Symbol, Int}}
             σ = match(p, s)
             @test length(σ) == 1
             @test σ(p) == s
+            @test σ[x] == convert(TermA, k₁)
         end
         @test match(p, convert(TermA, :(a + f(b)))) === nothing
     end
@@ -74,10 +98,12 @@ TermA = Term{Union{Symbol, Int}}
     @testset "$expr" begin
         p = convert(TermA, expr)
         @testset for k₁ ∈ EXPRS, k₂ ∈ EXPRS
-            s = convert(TermA, expr)
+            s = convert(TermA, :(TypeName{$k₁, $k₁, $k₂}))
             σ = match(p, s)
             @test length(σ) == 2
             @test σ(p) == s
+            @test σ[x] == convert(TermA, k₁)
+            @test σ[y] == convert(TermA, k₂)
         end
         @test match(p, convert(TermA, :(OtherName{a, a, b}))) === nothing
         @test match(p, convert(TermA, :([a, a, b]))) === nothing

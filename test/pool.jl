@@ -15,7 +15,6 @@ end
 
     @testset "$expr" for expr ∈ EXPRS
         term = push!(pool, expr)
-        @test isa(term, Term{UInt})
         @test pool[term] == expr
     end
 end

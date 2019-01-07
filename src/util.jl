@@ -1,36 +1,22 @@
-export head, children
+function expr_to_term(f::Function, T, x)
+    isa(x, Expr) || return Term{T}(f(x), Term{T}[])
 
-
-@inline head(t::Tree) = isa(t, Node) ? t.head : t
-@inline head(t::Term) = head(t.tree)
-
-@inline children(t::Tree) = isa(t, Node) ? t.args : []
-@inline children(t::Term{T}) where {T} = Term{T}.(children(t.tree))
-
-
-function expr_to_tree(f::Function, T, x)::Tree
-    isa(x, Variable) && return x
-
-    if isa(x, Expr)
-        args = similar(x.args, Tree{T})
-        for i ∈ eachindex(x.args)
-            args[i] = expr_to_tree(f, T, x.args[i])
-        end
-        return Node{T}(f(x.head), args)
+    args = similar(x.args, Term{T})
+    for i ∈ eachindex(x.args)
+        args[i] = expr_to_term(f, T, x.args[i])
     end
-
-    return Node{T}(f(x), Tree{T}[])
+    return Term{T}(f(x.head), args)
 end
-expr_to_tree(T, x) = expr_to_tree(identity, T, x)
+expr_to_term(T, x) = expr_to_term(identity, T, x)
 
 
-function tree_to_expr(f::Function, t::Tree)
-    isa(t, Node) || return t
-    _head = f(t.head)
-    (isa(_head, Symbol) && !isempty(t.args)) || return _head
+function term_to_expr(f::Function, t::Term)
+    head = f(t.head)
+    isempty(t.args) && return head
+    isa(head, Symbol) || throw(ArgumentError("invalid `Expr` head ($head)"))
 
-    expr = Expr(_head)
-    append!(expr.args, tree_to_expr.(f, t.args))
+    expr = Expr(head)
+    append!(expr.args, term_to_expr.(f, t.args))
     return expr
 end
-tree_to_expr(t::Tree) = tree_to_expr(identity, t)
+term_to_expr(t::Term) = term_to_expr(identity, t)
