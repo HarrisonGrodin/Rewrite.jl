@@ -40,7 +40,7 @@ u′ = convert(SymTerm, :(identity(+)(x, y)))
 @assert u == u′
 ```
 
-### Substitution Generation
+### Pattern Creation and Usage
 
 It is often useful to represent terms following a given structure abstractly, leaving syntactic variables in place of an arbitrary term. Thus, we provide the `Variable` constructor as follows. Note that each call to `Variable` produces a unique new variable.
 
