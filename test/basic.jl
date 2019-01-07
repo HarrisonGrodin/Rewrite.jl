@@ -10,7 +10,7 @@ using Test
 end
 
 @testset "Node" begin
-    TermA = Term{Union{Symbol, Int}}
+    TermA = Term{Union{Variable, Symbol, Int}}
     x = Variable()
 
     @testset "equality" begin

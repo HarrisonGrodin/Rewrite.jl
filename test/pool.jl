@@ -11,17 +11,16 @@ using Test
 end
 
 @testset "conversion" begin
-    pool = Pool{Union{Symbol, Int}}()
+    pool = Pool{Union{Variable, Symbol, Int}}()
 
     @testset "$expr" for expr ∈ EXPRS
         term = push!(pool, expr)
-        @test isa(term, Term{UInt})
         @test pool[term] == expr
     end
 end
 
 @testset "matching" begin
-    pool = Pool{Symbol}()
+    pool = Pool{Union{Variable, Symbol}}()
     x, y = Variable(), Variable()
 
     pattern_ = :($x * ($x + $y))

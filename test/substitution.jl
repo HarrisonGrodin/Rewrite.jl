@@ -2,7 +2,7 @@ using Terms
 using Test
 
 
-TermA = Term{Union{Symbol, Int}}
+TermA = Term{Union{Variable, Symbol, Int}}
 
 @testset "match" begin
     x = Variable()
