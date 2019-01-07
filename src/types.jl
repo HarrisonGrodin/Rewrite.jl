@@ -1,40 +1,21 @@
-export Variable, Pool, Term
+export Variable, Term
 
 
 mutable struct Variable end
 
 
-struct Node
-    head::Union{Symbol, UInt}
-    args::Vector{Union{Node, Variable}}
+struct Node{T}
+    head::T
+    args::Vector{Union{Node{T}, Variable}}
 end
 Base.:(==)(s::Node, t::Node) = (s.head, s.args) == (t.head, t.args)
 
-const Tree = Union{Node, Variable}
-
-
-struct Pool{T}
-    ids::Dict{T,UInt}
-    lookup::Vector{T}
-    Pool{T}() where {T} = new{T}(Dict{T,UInt}(), T[])
-end
-Base.broadcastable(p::Pool) = Ref(p)
-function Base.push!(p::Pool, x)
-    haskey(p.ids, x) && return p.ids[x]
-
-    push!(p.lookup, x)
-    index = UInt(length(p.lookup))
-    p.ids[x] = index
-    return index
-end
-Base.getindex(p::Pool, index::UInt) = p.lookup[index]
-
+const Tree{T} = Union{Node{T}, Variable}
 
 struct Term{T}
-    tree::Tree
-    pool::Pool{T}
+    tree::Tree{T}
 end
-(p::Pool)(ex) = Term(expr_to_tree(p, ex), p)
-Base.convert(::Type{Expr}, t::Term) = term_to_expr(t)
-
-Base.:(==)(s::Term, t::Term) = s.pool === t.pool && s.tree == t.tree
+Base.convert(::Type{Term{T}}, ex) where {T} = Term{T}(expr_to_tree(T, ex))
+Base.convert(::Type{Term{T}}, t::Term{T}) where {T} = t
+Base.convert(::Type{Expr}, t::Term) = tree_to_expr(t.tree)
+Base.:(==)(s::Term, t::Term) = s.tree == t.tree

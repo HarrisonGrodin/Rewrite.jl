@@ -2,19 +2,17 @@ using Terms
 using Test
 
 
-TermA = Pool{Symbol}()
+TermA = Term{Union{Symbol, Int}}
 
 @testset "match" begin
     x = Variable()
     y = Variable()
 
-    subjects = [:a, :(g(a)), :(a + b * f(c)), :([m, n]), x, y]
-
     expr = x
     @testset "$expr" begin
-        p = TermA(expr)
-        @testset for k₁ ∈ subjects
-            s = TermA(k₁)
+        p = convert(TermA, expr)
+        @testset for k₁ ∈ EXPRS
+            s = convert(TermA, k₁)
             σ = match(p, s)
             @test length(σ) == 1
             @test σ(p) == s
@@ -23,65 +21,65 @@ TermA = Pool{Symbol}()
 
     expr = :(f())
     @testset "$expr" begin
-        p = TermA(expr)
+        p = convert(TermA, expr)
         @testset begin
-            s = TermA(:(f()))
+            s = convert(TermA, :(f()))
             σ = match(p, s)
             @test isempty(σ)
             @test σ(p) == s
         end
-        @test match(p, TermA(:(g()))) === nothing
-        @test match(p, TermA(:(f(a)))) === nothing
+        @test match(p, convert(TermA, :(g()))) === nothing
+        @test match(p, convert(TermA, :(f(a)))) === nothing
     end
 
     expr = :($x + k)
     @testset "$expr" begin
-        p = TermA(expr)
-        @testset for k₁ ∈ subjects
-            s = TermA(:($k₁ + k))
+        p = convert(TermA, expr)
+        @testset for k₁ ∈ EXPRS
+            s = convert(TermA, :($k₁ + k))
             σ = match(p, s)
             @test length(σ) == 1
             @test σ(p) == s
         end
-        @test match(p, TermA(:(a + b))) === nothing
-        @test match(p, TermA(:(a - k))) === nothing
-        @test match(p, TermA(:(k + $x))) === nothing
+        @test match(p, convert(TermA, :(a + b))) === nothing
+        @test match(p, convert(TermA, :(a - k))) === nothing
+        @test match(p, convert(TermA, :(k + $x))) === nothing
     end
 
     expr = :($x - f($y))
     @testset "$expr" begin
-        p = TermA(expr)
-        @testset for k₁ ∈ subjects, k₂ ∈ subjects
-            s = TermA(:($k₁ - f($k₂)))
+        p = convert(TermA, expr)
+        @testset for k₁ ∈ EXPRS, k₂ ∈ EXPRS
+            s = convert(TermA, :($k₁ - f($k₂)))
             σ = match(p, s)
             @test length(σ) == 2
             @test σ(p) == s
         end
-        @test match(p, TermA(:(f(a) + b))) === nothing
+        @test match(p, convert(TermA, :(f(a) + b))) === nothing
     end
 
     expr = :($x + f($x))
     @testset "$expr" begin
-        p = TermA(expr)
-        @testset for k₁ ∈ subjects
-            s = TermA(:($k₁ + f($k₁)))
+        p = convert(TermA, expr)
+        @testset for k₁ ∈ EXPRS
+            s = convert(TermA, :($k₁ + f($k₁)))
             σ = match(p, s)
             @test length(σ) == 1
             @test σ(p) == s
         end
-        @test match(p, TermA(:(a + f(b)))) === nothing
+        @test match(p, convert(TermA, :(a + f(b)))) === nothing
     end
 
     expr = :(TypeName{$x, $x, $y})
     @testset "$expr" begin
-        p = TermA(expr)
-        @testset for k₁ ∈ subjects, k₂ ∈ subjects
-            s = TermA(expr)
+        p = convert(TermA, expr)
+        @testset for k₁ ∈ EXPRS, k₂ ∈ EXPRS
+            s = convert(TermA, expr)
             σ = match(p, s)
             @test length(σ) == 2
             @test σ(p) == s
         end
-        @test match(p, TermA(:(OtherName{a, a, b}))) === nothing
-        @test match(p, TermA(:([a, a, b]))) === nothing
+        @test match(p, convert(TermA, :(OtherName{a, a, b}))) === nothing
+        @test match(p, convert(TermA, :([a, a, b]))) === nothing
     end
 end
