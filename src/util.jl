@@ -4,8 +4,8 @@ export head, children
 @inline head(t::Tree) = isa(t, Node) ? t.head : t
 @inline head(t::Term) = head(t.tree)
 
-@inline children(t::Tree) = isa(t, Node) ? t.args : Tree[]
-@inline children(t::Term) = Term.(children(t.tree))
+@inline children(t::Tree) = isa(t, Node) ? t.args : []
+@inline children(t::Term{T}) where {T} = Term{T}.(children(t.tree))
 
 
 function expr_to_tree(T, x)::Tree

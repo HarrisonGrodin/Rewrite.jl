@@ -8,12 +8,10 @@ TermA = Term{Union{Symbol, Int}}
     x = Variable()
     y = Variable()
 
-    subjects = [:a, :(g(a)), :(a + b * f(c)), :([m, n]), x, y]
-
     expr = x
     @testset "$expr" begin
         p = convert(TermA, expr)
-        @testset for k₁ ∈ subjects
+        @testset for k₁ ∈ EXPRS
             s = convert(TermA, k₁)
             σ = match(p, s)
             @test length(σ) == 1
@@ -37,7 +35,7 @@ TermA = Term{Union{Symbol, Int}}
     expr = :($x + k)
     @testset "$expr" begin
         p = convert(TermA, expr)
-        @testset for k₁ ∈ subjects
+        @testset for k₁ ∈ EXPRS
             s = convert(TermA, :($k₁ + k))
             σ = match(p, s)
             @test length(σ) == 1
@@ -51,7 +49,7 @@ TermA = Term{Union{Symbol, Int}}
     expr = :($x - f($y))
     @testset "$expr" begin
         p = convert(TermA, expr)
-        @testset for k₁ ∈ subjects, k₂ ∈ subjects
+        @testset for k₁ ∈ EXPRS, k₂ ∈ EXPRS
             s = convert(TermA, :($k₁ - f($k₂)))
             σ = match(p, s)
             @test length(σ) == 2
@@ -63,7 +61,7 @@ TermA = Term{Union{Symbol, Int}}
     expr = :($x + f($x))
     @testset "$expr" begin
         p = convert(TermA, expr)
-        @testset for k₁ ∈ subjects
+        @testset for k₁ ∈ EXPRS
             s = convert(TermA, :($k₁ + f($k₁)))
             σ = match(p, s)
             @test length(σ) == 1
@@ -75,7 +73,7 @@ TermA = Term{Union{Symbol, Int}}
     expr = :(TypeName{$x, $x, $y})
     @testset "$expr" begin
         p = convert(TermA, expr)
-        @testset for k₁ ∈ subjects, k₂ ∈ subjects
+        @testset for k₁ ∈ EXPRS, k₂ ∈ EXPRS
             s = convert(TermA, expr)
             σ = match(p, s)
             @test length(σ) == 2
