@@ -1,4 +1,5 @@
 export Variable, Pattern
+export Substitution
 export match
 
 
