@@ -2,6 +2,25 @@ using Terms
 using Test
 
 
+@testset "Variable" begin
+    x = Variable()
+    y = Variable()
+
+    @testset "equality" begin
+        @test x == x
+        @test y == y
+        @test x ≠ y
+    end
+
+    @testset "promotion" begin
+        term = Term(:call, [Term(:+), Term(:a), Term(x)])
+        @test isa(term, Term{Union{Symbol, Variable}})
+        @test term.head::Symbol === :call
+        @test term.args[3].head === x
+    end
+end
+
+
 TermA = Pattern{Union{Symbol, Int}}
 
 @testset "match" begin
