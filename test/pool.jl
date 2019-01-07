@@ -19,3 +19,20 @@ end
         @test pool[term] == expr
     end
 end
+
+@testset "matching" begin
+    pool = Pool{Symbol}()
+    x, y = Variable(), Variable()
+
+    pattern_ = :($x * ($x + $y))
+    pattern = push!(pool, pattern_)
+
+    subject1 = :(a * (a + var))
+    σ₁ = match(pattern, push!(pool, subject1))
+    @test length(σ₁) == 2
+    @test pool[σ₁(pattern)] == subject1
+
+    subject2 = :(a * (b + var))
+    σ₂ = match(pattern, push!(pool, subject2))
+    @test σ₂ === nothing
+end
