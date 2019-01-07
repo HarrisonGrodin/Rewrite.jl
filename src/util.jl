@@ -18,10 +18,11 @@ expr_to_term(T, x) = expr_to_term(identity, T, x)
 
 
 function term_to_expr(f::Function, t::Term)
-    _head = f(t.head)
-    (isa(_head, Symbol) && !isempty(t.args)) || return _head
+    head = f(t.head)
+    isempty(t.args) && return head
+    isa(head, Symbol) || throw(ArgumentError("invalid `Expr` head ($head)"))
 
-    expr = Expr(_head)
+    expr = Expr(head)
     append!(expr.args, term_to_expr.(f, t.args))
     return expr
 end
