@@ -1,10 +1,10 @@
 export match
 
 
-struct Substitution <: AbstractDict{Variable,Term}
-    dict::Dict{Variable,Term}
+struct Substitution{T} <: AbstractDict{Variable,Term{T}}
+    dict::Dict{Variable,Term{T}}
 end
-Substitution() = Substitution(Dict{Variable,Term}())
+Substitution{T}() where {T} = Substitution(Dict{Variable,Term{T}}())
 (σ::Substitution)(t) = replace(t, σ)
 Base.length(σ::Substitution) = length(σ.dict)
 Base.iterate(σ::Substitution) = iterate(σ.dict)
@@ -25,7 +25,8 @@ Base.replace(t::Term{T}, σ::AbstractDict) where {T} =
 Syntactically match term `subject` to `pattern`, producing a `Substitution` if the
 process succeeds and `nothing` otherwise.
 """
-Base.match(pattern::Term, subject::Term) = _match!(Substitution(), pattern, subject)
+Base.match(pattern::Term, subject::Term{T}) where {T} =
+    _match!(Substitution{T}(), pattern, subject)
 
 function _match!(σ::Substitution, p::Term, s::Term)
     if isa(p.head, Variable)
