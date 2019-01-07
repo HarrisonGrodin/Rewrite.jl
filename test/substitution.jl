@@ -2,7 +2,7 @@ using Terms
 using Test
 
 
-TermA = Term{Union{Variable, Symbol, Int}}
+TermA = Pattern{Union{Symbol, Int}}
 
 @testset "match" begin
     x = Variable()
@@ -16,6 +16,7 @@ TermA = Term{Union{Variable, Symbol, Int}}
             σ = match(p, s)
             @test length(σ) == 1
             @test σ(p) == s
+            @test σ[x] == convert(TermA, k₁)
         end
     end
 
@@ -40,6 +41,7 @@ TermA = Term{Union{Variable, Symbol, Int}}
             σ = match(p, s)
             @test length(σ) == 1
             @test σ(p) == s
+            @test σ[x] == convert(TermA, k₁)
         end
         @test match(p, convert(TermA, :(a + b))) === nothing
         @test match(p, convert(TermA, :(a - k))) === nothing
@@ -54,6 +56,8 @@ TermA = Term{Union{Variable, Symbol, Int}}
             σ = match(p, s)
             @test length(σ) == 2
             @test σ(p) == s
+            @test σ[x] == convert(TermA, k₁)
+            @test σ[y] == convert(TermA, k₂)
         end
         @test match(p, convert(TermA, :(f(a) + b))) === nothing
     end
@@ -66,6 +70,7 @@ TermA = Term{Union{Variable, Symbol, Int}}
             σ = match(p, s)
             @test length(σ) == 1
             @test σ(p) == s
+            @test σ[x] == convert(TermA, k₁)
         end
         @test match(p, convert(TermA, :(a + f(b)))) === nothing
     end
@@ -74,10 +79,12 @@ TermA = Term{Union{Variable, Symbol, Int}}
     @testset "$expr" begin
         p = convert(TermA, expr)
         @testset for k₁ ∈ EXPRS, k₂ ∈ EXPRS
-            s = convert(TermA, expr)
+            s = convert(TermA, :(TypeName{$k₁, $k₁, $k₂}))
             σ = match(p, s)
             @test length(σ) == 2
             @test σ(p) == s
+            @test σ[x] == convert(TermA, k₁)
+            @test σ[y] == convert(TermA, k₂)
         end
         @test match(p, convert(TermA, :(OtherName{a, a, b}))) === nothing
         @test match(p, convert(TermA, :([a, a, b]))) === nothing

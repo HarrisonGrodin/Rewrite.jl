@@ -1,9 +1,4 @@
-export Variable, Term
-
-
-mutable struct Variable end
-Base.promote_rule(::Type{Variable}, T::Type) = Union{Variable, T}
-Base.promote_rule(::Type{Variable}, ::Type{Any}) = Any
+export Term
 
 
 struct Term{T}
