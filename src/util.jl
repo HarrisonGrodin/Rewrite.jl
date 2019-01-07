@@ -1,39 +1,34 @@
 export head, children
 
 
-@inline head(t::Tree) = isa(t, Variable) ? t : t.head
-@inline function head(t::Term)
-    isa(t.tree, Variable) && return t.tree
-
-    _head = head(t.tree::Node)
-    return isa(_head, Symbol) ? _head : t.pool[_head]
-end
+@inline head(t::Tree) = isa(t, Node) ? t.head : t
+@inline head(t::Term) = head(t.tree)
 
 @inline children(t::Tree) = isa(t, Node) ? t.args : Tree[]
-@inline children(t::Term) = Term.(children(t.tree), t.pool)
+@inline children(t::Term) = Term.(children(t.tree))
 
 
-function expr_to_tree(p::Pool, x)::Tree
+function expr_to_tree(T, x)::Tree
     isa(x, Variable) && return x
 
     if isa(x, Expr)
-        args = similar(x.args, Tree)
+        args = similar(x.args, Tree{T})
         for i ∈ eachindex(x.args)
-            args[i] = expr_to_tree(p, x.args[i])
+            args[i] = expr_to_tree(T, x.args[i])
         end
-        return Node(x.head, args)
+        return Node{T}(x.head, args)
     end
 
-    return Node(push!(p, x), Tree[])
+    return Node{T}(x, Tree{T}[])
 end
 
 
-term_to_expr(t::Term) = term_to_expr(t.pool, t.tree)
-function term_to_expr(p::Pool, t::Tree)
-    isa(t, Variable) && return t
-    isa(t.head, UInt) && return p[t.head]
+term_to_expr(t::Term) = term_to_expr(t.tree)
+function term_to_expr(t::Tree)
+    isa(t, Node) || return t
+    (isa(t.head, Symbol) && !isempty(t.args)) || return t.head
 
     expr = Expr(t.head)
-    append!(expr.args, term_to_expr.(p, t.args))
+    append!(expr.args, term_to_expr.(t.args))
     return expr
 end
