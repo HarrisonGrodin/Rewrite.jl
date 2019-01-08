@@ -53,8 +53,7 @@ julia> subject2 = convert(Term, :(p + f(q)));
 julia> match(pattern, subject2)
 ```
 """
-Base.match(pattern::Term, subject::Term) =
-    _match!(Substitution(), _unwrap(pattern), _unwrap(subject))
+Base.match(pattern::Term, subject::Term) = _match!(Substitution(), pattern.x, subject.x)
 
 function _match!(σ::Substitution, p, s)
     if isa(p, Variable)
