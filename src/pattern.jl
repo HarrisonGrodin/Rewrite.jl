@@ -43,7 +43,7 @@ julia> subject1 = convert(Term, :(ka + f(ka)));
 julia> σ = match(pattern, subject1);
 
 julia> σ[x]
-convert(Term, :ka)
+Term(:ka)
 
 julia> σ(subject1) == subject1
 true
