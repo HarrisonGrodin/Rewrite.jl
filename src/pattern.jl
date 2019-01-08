@@ -4,16 +4,12 @@ export match
 
 
 mutable struct Variable end
-Base.promote_rule(::Type{Variable}, T::Type) = Union{Variable, T}
-Base.promote_rule(::Type{Variable}, ::Type{Any}) = Any
-
-const Pattern{T} = Term{Union{Variable, T}}
 
 
-struct Substitution{T} <: AbstractDict{Variable,Term{T}}
-    dict::Dict{Variable,Term{T}}
+struct Substitution <: AbstractDict{Variable,Term}
+    dict::Dict{Variable,Term}
 end
-Substitution{T}() where {T} = Substitution(Dict{Variable,Term{T}}())
+Substitution() = Substitution(Dict{Variable,Term}())
 (σ::Substitution)(t) = replace(t, σ)
 Base.length(σ::Substitution) = length(σ.dict)
 Base.iterate(σ::Substitution) = iterate(σ.dict)
@@ -24,8 +20,8 @@ Base.setindex!(σ::Substitution, val, keys...) = (setindex!(σ.dict, val, keys..
 Base.get(σ::Substitution, key, default) = get(σ.dict, key, default)
 
 
-Base.replace(t::Term{T}, σ::AbstractDict) where {T} =
-    isa(t.head, Variable) ? get(σ, t.head, t) : Term{T}(t.head, replace.(t.args, Ref(σ)))
+Base.replace(t::Term, σ::AbstractDict) =
+    isa(root(t), Variable) ? get(σ, root(t), t) : map(x -> replace(x, σ), t)
 
 
 """
@@ -39,37 +35,42 @@ Syntactically match term `subject` to `pattern`, producing a `Substitution` such
 julia> x = Variable()
 Variable()
 
-julia> pattern = convert(Pattern{Symbol}, :(\$x + f(\$x)));
+julia> pattern = convert(Term, :(\$x + f(\$x)));
 
-julia> subject1 = convert(Term{Symbol}, :(ka + f(ka)));
+julia> subject1 = convert(Term, :(ka + f(ka)));
 
 julia> σ = match(pattern, subject1);
 
 julia> σ[x]
-Term{Symbol}(:ka, Term{Symbol}[])
+convert(Term, :ka)
 
 julia> σ(subject1) == subject1
 true
 
-julia> subject2 = convert(Term{Symbol}, :(p + f(q)));
+julia> subject2 = convert(Term, :(p + f(q)));
 
 julia> match(pattern, subject2)
 ```
 """
-Base.match(pattern::Term, subject::Term{T}) where {T} =
-    _match!(Substitution{T}(), pattern, subject)
+Base.match(pattern::Term, subject::Term) =
+    _match!(Substitution(), pattern, subject)
 
-function _match!(σ::Substitution, p::Term, s::Term)
-    if isa(p.head, Variable)
-        x = p.head
+function _match!(σ::Substitution, p, s)
+    x = root(p)
+    if isa(x, Variable)
         haskey(σ, x) && (isequal(σ[x], s) || return)
-        return setindex!(σ, s, x)  # σ[p] = s
+        return setindex!(σ, s, x)  # σ[x] = s
     end
 
-    isequal(p.head, s.head)          || return
-    length(p.args) == length(s.args) || return
+    is_branch(p) || return isequal(p, s) ? σ : nothing
+    is_branch(s) || return
 
-    for (x, y) ∈ zip(p.args, s.args)
+    root(p) == root(s)               || return
+
+    ps, ss = children(p), children(s)
+    length(ps) == length(ss) || return
+
+    for (x, y) ∈ zip(ps, ss)
         σ′ = _match!(σ, x, y)
         σ′ === nothing && return
         σ = σ′
