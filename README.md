@@ -4,7 +4,7 @@
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/rtaksxe4wu0j6xqv/branch/master?svg=true)](https://ci.appveyor.com/project/HarrisonGrodin/terms-jl/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/HarrisonGrodin/Terms.jl/badge.svg?branch=master)](https://coveralls.io/github/HarrisonGrodin/Terms.jl?branch=master)
 
-**Terms.jl** provides performance-oriented symbolic term operations.
+**Terms.jl** provides performance-oriented symbolic term utilities.
 
 
 ## Features
