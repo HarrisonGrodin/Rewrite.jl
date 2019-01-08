@@ -78,22 +78,6 @@ s′ = convert(SymTerm, :(k ^ (a + b) - n))
 
 Syntactic unification is planned but not currently included.
 
-### Constant Pooling
-
-In order to improve performance during critical operations, we can assign all constants within a term a unique identifier of a fixed type, guaranteeing type stability during term manipulations. This is the purpose of a constant pool.
-
-We register an expression with a constant pool as follows, using `push!` to insert the expression into the pool and `getindex` to generate an expression using the pool.
-
-```julia
-pool = Pool{Union{Symbol, Int}}()
-
-expr = :(2 ^ k - 1)
-term = push!(pool, expr)
-@assert pool[term] == expr
-```
-
-**Note:** We do not pool `Variable` objects due to their unique meaning during matching.
-
 
 ## Acknowledgements
 - [*Term Rewriting and All That*](https://www21.in.tum.de/~nipkow/TRaAT/)
