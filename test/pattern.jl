@@ -37,6 +37,8 @@ end
             @test isempty(σ)
             @test σ(p) == s
         end
+        @test match(p, convert(Term, 2)) === nothing
+        @test match(p, convert(Term, :f)) === nothing
         @test match(p, convert(Term, :(g()))) === nothing
         @test match(p, convert(Term, :(f(a)))) === nothing
     end
@@ -51,6 +53,7 @@ end
             @test σ(p) == s
             @test σ[x] == convert(Term, k₁)
         end
+        @test match(p, convert(Term, :+)) === nothing
         @test match(p, convert(Term, :(a + b))) === nothing
         @test match(p, convert(Term, :(a - k))) === nothing
         @test match(p, convert(Term, :(k + $x))) === nothing

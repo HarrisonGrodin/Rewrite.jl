@@ -17,7 +17,6 @@ Base.iterate(σ::Substitution, state) = iterate(σ.dict, state)
 Base.keys(σ::Substitution) = keys(σ.dict)
 Base.getindex(σ::Substitution, keys...) = Term(getindex(σ.dict, keys...))
 Base.setindex!(σ::Substitution, val, keys...) = (setindex!(σ.dict, val, keys...); σ)
-Base.setindex!(σ::Substitution, val::Term, keys...) = setindex!(σ, val.x, keys...)
 Base.get(σ::Substitution, key, default) = get(σ.dict, key, default)
 
 
