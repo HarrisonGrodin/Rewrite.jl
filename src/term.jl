@@ -41,12 +41,8 @@ function _show_term(f::Function)
     # Inspired by: `show(::IO, ::Function)`
     ft = typeof(f)
     mt = ft.name.mt
-    if isdefined(mt, :module) && isdefined(mt.module, mt.name) && getfield(mt.module, mt.name) === f
-        Base.is_exported_from_stdlib(mt.name, mt.module) && return mt.name
-        return :($(nameof(mt.module)).$(mt.name))
-    else
-        return f
-    end
+    Base.is_exported_from_stdlib(mt.name, mt.module) && return mt.name
+    return :($(nameof(mt.module)).$(mt.name))
 end
 function _show_term(ex::Expr)
     ex′ = Expr(ex.head)
