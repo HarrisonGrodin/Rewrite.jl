@@ -3,52 +3,33 @@ using Test
 
 
 @testset "construction" begin
-    @test isa(Term(3), Term{Int})
-    @test isa(Term{Int}(3), Term{Int})
-    @test isa(Term(:x), Term{Symbol})
+    @test convert(Term, :(x + 2y)) == convert(Term, :(x + 2y))
+    @test convert(Term, :(x + 2y)) ≠ convert(Term, :(x + 3y))
+    @test convert(Term, :(x + 2y)) ≠ convert(Term, :(x + 2z))
 
-    t1 = Term(3, [Term(4),   Term(5)])
-    @test isa(t1, Term{Int})
-    @test t1.head::Int === 3
-    @test t1.args[1].head === 4
+    @test convert(Term, 2) == convert(Term, convert(Term, 2))
 
-    t2 = Term(3, [Term(4.0), Term(5)])
-    @test isa(t2, Term{Float64})
-    @test t2.head::Float64 === 3.0
-    @test t2.args[1].head::Float64 === 4.0
+    function test_tree(ex::Expr, t::Term)
+        @test root(t) === ex.head
+        @test length(children(t)) == length(ex.args)
 
-    t3 = Term{Int}(3, [Term(4.0), Term(5)])
-    @test isa(t3, Term{Int})
-    @test t3.head::Int === 3
-    @test t3.args[1].head::Int === 4
+        test_tree.(ex.args, children(t))
+        nothing
+    end
+    function test_tree(x, t::Term)
+        @test root(t) === x
+        @test isempty(children(t))
+        nothing
+    end
+
+    @testset for expr ∈ EXPRS
+        term = convert(Term, expr)
+        @test convert(Expr, term) == expr
+        test_tree(expr, term)
+    end
 end
 
-
-TermA = Term{Union{Variable, Symbol, Int}}
-
-@testset "conversion" begin
-    @test convert(TermA, :(x + 2y)) == convert(TermA, :(x + 2y))
-    @test convert(TermA, :(x + 2y)) ≠ convert(TermA, :(x + 3y))
-    @test convert(TermA, :(x + 2y)) ≠ convert(TermA, :(x + 2z))
-
-    @testset "shape" begin
-        function test_tree(ex::Expr, t)
-            @test t.head === ex.head
-            @test length(ex.args) == length(t.args)
-
-            test_tree.(ex.args, t.args)
-            nothing
-        end
-        function test_tree(x, t)
-            @test t.head === x
-            @test isempty(t.args)
-            nothing
-        end
-
-        @testset for expr ∈ EXPRS
-            term = convert(TermA, expr)
-            @test convert(Expr, term) == expr
-            test_tree(expr, term)
-        end
-    end
+@testset "equality" begin
+    @test convert(Term, 0.0) == convert(Term, -0.0)
+    @test !isequal(convert(Term, 0.0), convert(Term, -0.0))
 end
