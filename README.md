@@ -65,4 +65,5 @@ Syntactic unification is planned but not currently included.
 
 ## Acknowledgements
 - [*Term Rewriting and All That*](https://www21.in.tum.de/~nipkow/TRaAT/)
-- @YingboMa
+- [@YingboMa](https://github.com/YingboMa)
+- [@MasonProtter](https://github.com/MasonProtter)
