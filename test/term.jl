@@ -59,6 +59,11 @@ end
 end
 
 @testset "show" begin
+    @test sprint(show, @term(2)) == "@term(2)"
+    @test sprint(show, @term(-3.7)) == "@term(-3.7)"
+    @test sprint(show, @term("test")) == "@term(\"test\")"
+    @test sprint(show, @term(:x)) == "@term(:x)"
+
     let x = 1
         @test sprint(show, @term([x, :x])) == "@term([1, :x])"
     end
@@ -66,6 +71,8 @@ end
     let x = Variable()
         @test sprint(show, @term([x, :x])) == "@term([$x, :x])"
     end
+
+    @test sprint(show, @term(sin(π) + (3 - 5))) == "@term(sin($π) + (3 - 5))"
 
     @test sprint(show, @term(Base.Broadcast.materialize(1, 2))) ==
         "@term(Broadcast.materialize(1, 2))"
