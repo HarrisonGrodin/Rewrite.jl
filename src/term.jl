@@ -1,4 +1,4 @@
-export Term
+export Term, @term
 export is_branch, root, children
 
 
@@ -23,4 +23,15 @@ function Base.map(f, t::Term)
     expr = Expr(root(t))
     append!(expr.args, map(t -> (f(t)::Term).x, children(t)))
     convert(Term, expr)
+end
+
+
+macro term(ex)
+   :(Term($(_term(ex))))
+end
+function _term(ex)
+    isa(ex, Expr) || return esc(ex)
+    ex.head === :$ && return esc(ex.args[1])
+    ex.head === :. && return esc(ex)
+    return :(Expr($(Meta.quot(ex.head)), $(_term.(ex.args)...)))
 end

@@ -19,10 +19,10 @@ Every term `t::Term` wraps an object from the Julia AST, namely an `Expr` or a c
 
 ```julia
 k = 2
-t = convert(Term, :(f(g(a), $k)))  # f(g(a), 2)
+t = @term(mod(k ^ 5, 3))  # mod(2 ^ 5, 3)
 
 @assert root(t) == :call
-@assert children(t) == [convert(Term, :f), convert(Term, :(g(a))), convert(Term, k)]
+@assert children(t) == [@term(mod), @term(k ^ 5), @term 3]
 ```
 
 
@@ -32,7 +32,7 @@ It is often useful to represent terms following a given structure abstractly, le
 
 ```julia
 x = Variable()
-p = convert(Term, :(m ^ $x - n))
+p = @term(2 ^ x - 1)
 ```
 
 **Note:** `Variable` is used to represent an arbitrary symbolic term, *not* an unknown parameter value.
@@ -42,17 +42,17 @@ p = convert(Term, :(m ^ $x - n))
 Given a pattern `p::Term` and a subject `s::Term` of the same structure, we can generate a substitution `σ::Substitution` such that applying the substitution to `p` results in `s`, or `σ(p) == s`, as follows.
 
 ```julia
-s = convert(Term, :(m ^ (a + b) - n))
+s = @term(2 ^ (sin(π / 2) + 3) - 1)
 σ = match(p, s)
 
-@assert σ[x] == convert(Term, :(a + b))
+@assert σ[x] == @term(sin(π / 2) + 3)
 @assert σ(p) == s
 ```
 
 If the matching procedure fails, `nothing` is returned.
 
 ```julia
-s′ = convert(Term, :(k ^ (a + b) - n))
+s′ = @term(3 ^ 5 - 1)
 σ′ = match(p, s′)
 
 @assert σ′ === nothing

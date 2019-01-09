@@ -35,19 +35,19 @@ Syntactically match term `subject` to `pattern`, producing a `Substitution` such
 julia> x = Variable()
 Variable()
 
-julia> pattern = convert(Term, :(\$x + f(\$x)));
+julia> pattern = @term(x + abs(x)));
 
-julia> subject1 = convert(Term, :(ka + f(ka)));
+julia> subject1 = @term(-6 + abs(-6));
 
 julia> σ = match(pattern, subject1);
 
 julia> σ[x]
-Term(:ka)
+@term(-6)
 
 julia> σ(subject1) == subject1
 true
 
-julia> subject2 = convert(Term, :(p + f(q)));
+julia> subject2 = @term(-6 + abs(-5));
 
 julia> match(pattern, subject2)
 ```

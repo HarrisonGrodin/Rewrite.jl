@@ -3,6 +3,30 @@ using Test
 
 
 @testset "construction" begin
+    x = Variable()
+    k = 7.8
+
+    t1 = @term(x)
+    @test root(t1) === x
+    @test isempty(children(t1))
+
+    t2 = @term(k)
+    @test root(t2) === k
+    @test isempty(children(t2))
+
+    t3 = @term("test")
+    @test root(t3) == "test"
+    @test isempty(children(t3))
+
+    t4 = @term(x^2 + k)
+    @test root(t4) === :call
+    @test children(t4) == [@term(+), @term(x^2), @term(k)]
+
+    t5 = @term(x^$(1+1) + k)
+    @test t4 == t5
+end
+
+@testset "conversion" begin
     @test convert(Term, :(x + 2y)) == convert(Term, :(x + 2y))
     @test convert(Term, :(x + 2y)) ≠ convert(Term, :(x + 3y))
     @test convert(Term, :(x + 2y)) ≠ convert(Term, :(x + 2z))
@@ -30,6 +54,6 @@ using Test
 end
 
 @testset "equality" begin
-    @test convert(Term, 0.0) == convert(Term, -0.0)
-    @test !isequal(convert(Term, 0.0), convert(Term, -0.0))
+    @test @term(0.0) == @term(-0.0)
+    @test !isequal(@term(0.0), @term(-0.0))
 end
