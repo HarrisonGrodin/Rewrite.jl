@@ -57,3 +57,16 @@ end
     @test @term(0.0) == @term(-0.0)
     @test !isequal(@term(0.0), @term(-0.0))
 end
+
+@testset "show" begin
+    let x = 1
+        @test sprint(show, @term([x, :x])) == "@term([1, :x])"
+    end
+
+    let x = Variable()
+        @test sprint(show, @term([x, :x])) == "@term([$x, :x])"
+    end
+
+    @test sprint(show, @term(Base.Broadcast.materialize(1, 2))) ==
+        "@term(Broadcast.materialize(1, 2))"
+end

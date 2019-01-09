@@ -35,3 +35,28 @@ function _term(ex)
     ex.head === :. && return esc(ex)
     return :(Expr($(Meta.quot(ex.head)), $(_term.(ex.args)...)))
 end
+
+
+function _show_term(f::Function)
+    # Inspired by: `show(::IO, ::Function)`
+    ft = typeof(f)
+    mt = ft.name.mt
+    if isdefined(mt, :module) && isdefined(mt.module, mt.name) && getfield(mt.module, mt.name) === f
+        Base.is_exported_from_stdlib(mt.name, mt.module) && return mt.name
+        return :($(nameof(mt.module)).$(mt.name))
+    else
+        return f
+    end
+end
+function _show_term(ex::Expr)
+    ex′ = Expr(ex.head)
+    append!(ex′.args, _show_term.(ex.args))
+    ex′
+end
+_show_term(x::Symbol) = Meta.quot(x)
+_show_term(x) = x
+function Base.show(io::IO, t::Term)
+    macro_call = Expr(:macrocall, Symbol("@term"), nothing, _show_term(t.x))
+    repr = sprint(show, macro_call)[9:end-1]
+    print(io, "@term(", repr, ")")
+end
