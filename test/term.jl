@@ -26,6 +26,18 @@ using Test
     @test t4 == t5
 end
 
+@testset "combination" begin
+    a = @term(1 + 2)
+    b = @term(3)
+    t = @term(a ^ b)
+
+    @test root(t) === :call
+    @test children(t) == [@term(^), a, b]
+    @test t == @term((1 + 2) ^ 3)
+
+    @test @term(1 + $(@term(sin(2)))) == @term(1 + sin(2))
+end
+
 @testset "conversion" begin
     @test convert(Term, :(x + 2y)) == convert(Term, :(x + 2y))
     @test convert(Term, :(x + 2y)) ≠ convert(Term, :(x + 3y))

@@ -30,11 +30,13 @@ macro term(ex)
    :(Term($(_term(ex))))
 end
 function _term(ex)
-    isa(ex, Expr) || return esc(ex)
-    ex.head === :$ && return esc(ex.args[1])
-    ex.head === :. && return esc(ex)
+    isa(ex, Expr) || return _unwrap_ex(ex)
+    ex.head === :$ && return _unwrap_ex(ex.args[1])
+    ex.head === :. && return _unwrap_ex(ex)
     return :(Expr($(Meta.quot(ex.head)), $(_term.(ex.args)...)))
 end
+_unwrap_ex(ex) = :(_unwrap($(esc(ex))))
+_unwrap(t) = isa(t, Term) ? t.x : t
 
 
 function _show_term(f::Function)
