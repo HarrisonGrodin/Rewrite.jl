@@ -75,6 +75,7 @@ end
     @test sprint(show, @term(-3.7)) == "@term(-3.7)"
     @test sprint(show, @term("test")) == "@term(\"test\")"
     @test sprint(show, @term(:x)) == "@term(:x)"
+    @test sprint(show, @term(:ω)) == "@term(:ω)"
 
     let x = 1
         @test sprint(show, @term([x, :x])) == "@term([1, :x])"

@@ -39,22 +39,18 @@ _unwrap_ex(ex) = :(_unwrap($(esc(ex))))
 _unwrap(t) = isa(t, Term) ? t.x : t
 
 
-function _show_term(f::Function)
+function _show(f::Function)
     # Inspired by: `show(::IO, ::Function)`
     ft = typeof(f)
     mt = ft.name.mt
     Base.is_exported_from_stdlib(mt.name, mt.module) && return mt.name
     return :($(nameof(mt.module)).$(mt.name))
 end
-function _show_term(ex::Expr)
+function _show(ex::Expr)
     ex′ = Expr(ex.head)
-    append!(ex′.args, _show_term.(ex.args))
+    append!(ex′.args, _show.(ex.args))
     ex′
 end
-_show_term(x::Symbol) = Meta.quot(x)
-_show_term(x) = x
-function Base.show(io::IO, t::Term)
-    macro_call = Expr(:macrocall, Symbol("@term"), nothing, _show_term(t.x))
-    repr = sprint(show, macro_call)[9:end-1]
-    print(io, "@term(", repr, ")")
-end
+_show(x::Symbol) = Meta.quot(x)
+_show(x) = x
+Base.show(io::IO, t::Term) = Base.show_call(io, :call, Symbol("@term"), [_show(t.x)], 0)
