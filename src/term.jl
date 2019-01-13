@@ -55,6 +55,6 @@ _show_term(x::Symbol) = Meta.quot(x)
 _show_term(x) = x
 function Base.show(io::IO, t::Term)
     macro_call = Expr(:macrocall, Symbol("@term"), nothing, _show_term(t.x))
-    repr = sprint(show, macro_call)[9:end-1]
-    print(io, "@term(", repr, ")")
+    repr = sprint(show, macro_call)[9:end]
+    print(io, "@term("*repr)
 end
