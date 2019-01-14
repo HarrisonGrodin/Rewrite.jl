@@ -7,20 +7,20 @@ using Test
     k = 7.8
 
     t1 = @term(x)
-    @test root(t1) === x
-    @test isempty(children(t1))
+    @test t1.head === x
+    @test isempty(t1.args)
 
     t2 = @term(k)
-    @test root(t2) === k
-    @test isempty(children(t2))
+    @test t2.head === k
+    @test isempty(t2.args)
 
     t3 = @term("test")
-    @test root(t3) == "test"
-    @test isempty(children(t3))
+    @test t3.head == "test"
+    @test isempty(t3.args)
 
     t4 = @term(x^2 + k)
-    @test root(t4) === :call
-    @test children(t4) == [@term(+), @term(x^2), @term(k)]
+    @test t4.head === :call
+    @test t4.args == [@term(+), @term(x^2), @term(k)]
 
     t5 = @term(x^$(1+1) + k)
     @test t4 == t5
@@ -31,8 +31,8 @@ end
     b = @term(3)
     t = @term(a ^ b)
 
-    @test root(t) === :call
-    @test children(t) == [@term(^), a, b]
+    @test t.head === :call
+    @test t.args == [@term(^), a, b]
     @test t == @term((1 + 2) ^ 3)
 
     @test @term(1 + $(@term(sin(2)))) == @term(1 + sin(2))
@@ -46,15 +46,17 @@ end
     @test convert(Term, 2) == convert(Term, convert(Term, 2))
 
     function test_tree(ex::Expr, t::Term)
-        @test root(t) === ex.head
-        @test length(children(t)) == length(ex.args)
+        @test !isleaf(t)
+        @test t.head === ex.head
+        @test length(t.args) == length(ex.args)
 
-        test_tree.(ex.args, children(t))
+        test_tree.(ex.args, t.args)
         nothing
     end
     function test_tree(x, t::Term)
-        @test root(t) === x
-        @test isempty(children(t))
+        @test isleaf(t)
+        @test t.head === x
+        @test isempty(t.args)
         nothing
     end
 
