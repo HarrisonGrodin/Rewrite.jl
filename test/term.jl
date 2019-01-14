@@ -26,6 +26,11 @@ using Test
     @test t4 == t5
 end
 
+struct WrapperTest
+    t::Term
+end
+Base.convert(::Type{Term}, w::WrapperTest) = w.t
+
 @testset "combination" begin
     a = @term(1 + 2)
     b = @term(3)
@@ -36,6 +41,12 @@ end
     @test t == @term((1 + 2) ^ 3)
 
     @test @term(1 + $(@term(sin(2)))) == @term(1 + sin(2))
+
+    w = WrapperTest(@term(sin(2a)))
+    t2 = @term(w + 1)
+    @test t2.head === :call
+    @test t2.args == [@term(+), @term(sin(2*(1+2))), @term(1)]
+    @test t2 == @term(sin(2*(1+2)) + 1)
 end
 
 @testset "conversion" begin
