@@ -39,7 +39,7 @@ function _term(ex)
     return :(Expr($(Meta.quot(ex.head)), $(_term.(ex.args)...)))
 end
 _unwrap_ex(ex) = :(_unwrap($(esc(ex))))
-_unwrap(t) = isa(t, Term) ? t.x : t
+_unwrap(t) = convert(Term, t).x
 
 
 function _show(f::Function)
