@@ -7,20 +7,20 @@ using Test
     k = 7.8
 
     t1 = @term(x)
-    @test t1.head === x
-    @test isempty(t1.args)
+    @test root(t1) === x
+    @test isempty(children(t1))
 
     t2 = @term(k)
-    @test t2.head === k
-    @test isempty(t2.args)
+    @test root(t2) === k
+    @test isempty(children(t2))
 
     t3 = @term("test")
-    @test t3.head == "test"
-    @test isempty(t3.args)
+    @test root(t3) == "test"
+    @test isempty(children(t3))
 
     t4 = @term(x^2 + k)
-    @test t4.head === :call
-    @test t4.args == [@term(+), @term(x^2), @term(k)]
+    @test root(t4) === :call
+    @test children(t4) == [@term(+), @term(x^2), @term(k)]
 
     t5 = @term(x^$(1+1) + k)
     @test t4 == t5
@@ -36,16 +36,16 @@ Base.convert(::Type{Term}, w::WrapperTest) = w.t
     b = @term(3)
     t = @term(a ^ b)
 
-    @test t.head === :call
-    @test t.args == [@term(^), a, b]
+    @test root(t) === :call
+    @test children(t) == [@term(^), a, b]
     @test t == @term((1 + 2) ^ 3)
 
     @test @term(1 + $(@term(sin(2)))) == @term(1 + sin(2))
 
     w = WrapperTest(@term(sin(2a)))
     t2 = @term(w + 1)
-    @test t2.head === :call
-    @test t2.args == [@term(+), @term(sin(2*(1+2))), @term(1)]
+    @test root(t2) === :call
+    @test children(t2) == [@term(+), @term(sin(2*(1+2))), @term(1)]
     @test t2 == @term(sin(2*(1+2)) + 1)
 end
 
@@ -57,17 +57,15 @@ end
     @test convert(Term, 2) == convert(Term, convert(Term, 2))
 
     function test_tree(ex::Expr, t::Term)
-        @test !isleaf(t)
-        @test t.head === ex.head
-        @test length(t.args) == length(ex.args)
+        @test root(t) === ex.head
+        @test length(children(t)) == length(ex.args)
 
-        test_tree.(ex.args, t.args)
+        test_tree.(ex.args, children(t))
         nothing
     end
     function test_tree(x, t::Term)
-        @test isleaf(t)
-        @test t.head === x
-        @test isempty(t.args)
+        @test root(t) === x
+        @test isempty(children(t))
         nothing
     end
 

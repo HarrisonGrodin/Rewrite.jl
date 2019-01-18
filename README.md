@@ -15,14 +15,14 @@ Terms.jl exports the following features. For the remainder of the document, we a
 using Terms
 ```
 
-Every term `t::Term` wraps an object from the Julia AST, namely an `Expr` or a constant. We retrieve the root value of `t` using `t.head` and the child terms using `t.args::Vector{Term}`.
+Every term `t::Term` wraps an object from the Julia AST, namely an `Expr` or a constant. We retrieve the root value of `t` using `root(t)` and the child terms using `children(t)::Vector{Term}`.
 
 ```julia
 k = 2
 t = @term(mod(k ^ 5, 3))  # mod(2 ^ 5, 3)
 
-@assert t.head == :call
-@assert t.args == [@term(mod), @term(k ^ 5), @term 3]
+@assert root(t) == :call
+@assert children(t) == [@term(mod), @term(k ^ 5), @term 3]
 ```
 
 

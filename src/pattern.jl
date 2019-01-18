@@ -21,7 +21,7 @@ Base.get(σ::Substitution, key, default) = get(σ.dict, key, default)
 
 
 Base.replace(t::Term, σ::AbstractDict) = convert(Term, _replace(t, σ))
-_replace(t, σ) = isa(t.head, Variable) ? get(σ, t.head, t) : map(x -> replace(x, σ), t)
+_replace(t, σ) = isa(root(t), Variable) ? get(σ, root(t), t) : map(x -> replace(x, σ), t)
 
 
 """
