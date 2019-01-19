@@ -10,26 +10,26 @@ using Test
     @test root(t1) === x
     @test isleaf(t1)
     @test isempty(eachindex(t1))
-    @test isempty(children(t1))
+    @test isempty(collect(t1))
     @test_throws BoundsError(t1, 1) t1[1]
 
     t2 = @term(k)
     @test root(t2) === k
     @test isleaf(t2)
     @test isempty(eachindex(t2))
-    @test isempty(children(t2))
+    @test isempty(collect(t2))
 
     t3 = @term("test")
     @test root(t3) == "test"
     @test isleaf(t3)
     @test isempty(eachindex(t3))
-    @test isempty(children(t3))
+    @test isempty(collect(t3))
 
     t4 = @term(x^2 + k)
     @test root(t4) === :call
     @test !isleaf(t4)
     @test eachindex(t4) == 1:3
-    @test children(t4) == [@term(+), @term(x^2), @term(k)]
+    @test collect(t4) == [@term(+), @term(x^2), @term(k)]
     @test t4[1] == @term(+)
     @test t4[2] == @term(x^2)
     @test t4[2,3] == t4[2][3] == @term(2)
@@ -52,7 +52,7 @@ Base.convert(::Type{Term}, w::WrapperTest) = w.t
     t = @term(a ^ b)
 
     @test root(t) === :call
-    @test children(t) == [@term(^), a, b]
+    @test collect(t) == [@term(^), a, b]
     @test t == @term((1 + 2) ^ 3)
 
     @test @term(1 + $(@term(sin(2)))) == @term(1 + sin(2))
@@ -60,7 +60,7 @@ Base.convert(::Type{Term}, w::WrapperTest) = w.t
     w = WrapperTest(@term(sin(2a)))
     t2 = @term(w + 1)
     @test root(t2) === :call
-    @test children(t2) == [@term(+), @term(sin(2*(1+2))), @term(1)]
+    @test collect(t2) == [@term(+), @term(sin(2*(1+2))), @term(1)]
     @test t2 == @term(sin(2*(1+2)) + 1)
 end
 
@@ -74,17 +74,17 @@ end
     function test_tree(ex::Expr, t::Term)
         @test root(t) === ex.head
         @test eachindex(t) == 1:length(ex.args)
-        @test length(children(t)) == length(ex.args)
-        @test eltype(children(t)) <: Term
+        @test length(collect(t)) == length(ex.args)
+        @test eltype(collect(t)) <: Term
 
-        test_tree.(ex.args, children(t))
+        test_tree.(ex.args, collect(t))
         nothing
     end
     function test_tree(x, t::Term)
         @test root(t) === x
         @test isempty(eachindex(t))
-        @test isempty(children(t))
-        @test eltype(children(t)) <: Term
+        @test isempty(collect(t))
+        @test eltype(collect(t)) <: Term
         nothing
     end
 

@@ -1,5 +1,5 @@
 export Term, @term
-export isleaf, root, children
+export isleaf, root
 
 
 struct Term
@@ -8,7 +8,6 @@ end
 
 @inline isleaf(t::Term) = !isa(t.x, Expr)
 @inline root(t::Term) = isleaf(t) ? t.x : t.x.head
-@inline children(t::Term) = [t[i] for i ∈ eachindex(t)]
 
 Base.convert(::Type{Term}, t::Term) = t
 Base.convert(::Type{Term}, x) = Term(x)
