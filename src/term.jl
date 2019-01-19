@@ -1,14 +1,22 @@
 export Term, @term
-export is_branch, root, children
+export isleaf, root, children
 
 
 struct Term
     x
 end
 
-@inline is_branch(t::Term) = isa(t.x, Expr)
-@inline root(t::Term)     = is_branch(t) ? t.x.head                 : t.x
-@inline children(t::Term) = is_branch(t) ? convert.(Term, t.x.args) : Term[]
+@inline isleaf(t::Term) = !isa(t.x, Expr)
+@inline root(t::Term) = isleaf(t) ? t.x : t.x.head
+@inline children(t::Term) = [t[i] for i ∈ eachindex(t)]
+
+function Base.getindex(t::Term, i)
+    @boundscheck isleaf(t) && throw(BoundsError(t, i))
+    @boundscheck checkbounds(Bool, t.x.args, i) || throw(BoundsError(t, i))
+    return convert(Term, t.x.args[i])
+end
+Base.getindex(t::Term, inds...) = foldl(getindex, inds; init=t)
+Base.eachindex(t::Term) = isleaf(t) ? Base.OneTo(0) : eachindex(t.x.args)
 
 Base.convert(::Type{Term}, t::Term) = t
 Base.convert(::Type{Term}, x) = Term(x)
@@ -36,7 +44,7 @@ function _term(ex)
     return :(Expr($(Meta.quot(ex.head)), $(_term.(ex.args)...)))
 end
 _unwrap_ex(ex) = :(_unwrap($(esc(ex))))
-_unwrap(t) = isa(t, Term) ? t.x : t
+_unwrap(t) = convert(Term, t).x
 
 
 function _show(f::Function)
