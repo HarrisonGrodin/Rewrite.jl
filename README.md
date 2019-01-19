@@ -15,7 +15,7 @@ Terms.jl exports the following features. For the remainder of the document, we a
 using Terms
 ```
 
-Every term `t::Term` wraps an object from the Julia AST, namely an `Expr` or a constant. We retrieve the root value of `t` using `root(t)` and the child terms using `children(t)::Vector{Term}`.
+Every term `t::Term` represents an abstract syntax tree. We retrieve the root value of `t` using `root(t)` and the child terms using `children(t)::Vector{Term}`.
 
 ```julia
 k = 2
@@ -23,6 +23,30 @@ t = @term(mod(k ^ 5, 3))  # mod(2 ^ 5, 3)
 
 @assert root(t) == :call
 @assert children(t) == [@term(mod), @term(k ^ 5), @term 3]
+```
+
+Additionally, we can retrieve a subterm using standard indexing notation, `t[inds...]`.
+
+```julia
+@assert t[2] == @term(2 ^ 5)
+@assert t[2,1] == @term(^)
+```
+
+#### Example: In-Order Traversal
+
+```julia
+function leaves(t::Term)
+    isleaf(t) && return Any[root(t)]
+
+    ls = Any[]
+    for i ∈ eachindex(t)
+        append!(ls, inord(t[i]))
+    end
+    return ls
+end
+
+@assert leaves(t) == [mod, ^, 2, 5, 3]
+@assert leaves(@term((1 + 2) * (3 + 4))) == [*, +, 1, 2, +, 3, 4]
 ```
 
 
