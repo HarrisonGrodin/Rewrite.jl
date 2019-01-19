@@ -74,6 +74,8 @@ end
     function test_tree(ex::Expr, t::Term)
         @test root(t) === ex.head
         @test eachindex(t) == 1:length(ex.args)
+        @test firstindex(t) == 1
+        @test lastindex(t) == length(ex.args)
         @test length(children(t)) == length(ex.args)
         @test eltype(children(t)) <: Term
 

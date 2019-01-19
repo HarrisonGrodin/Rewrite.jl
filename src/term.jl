@@ -17,11 +17,9 @@ Base.convert(::Type{Expr}, t::Term) = t.x
 Base.:(==)(s::Term, t::Term) = s.x == t.x
 Base.isequal(s::Term, t::Term) = isequal(s.x, t.x)
 
-Base.eltype(::Type{Term}) = Term
 Base.eachindex(t::Term) = isleaf(t) ? Base.OneTo(0) : eachindex(t.x.args)
 Base.firstindex(t::Term) = first(eachindex(t))
 Base.lastindex(t::Term) = last(eachindex(t))
-Base.length(t::Term) = length(eachindex(t))
 
 @inline function Base.getindex(t::Term, i)
     @boundscheck checkindex(Bool, eachindex(t), i) || throw(BoundsError(t, i))
