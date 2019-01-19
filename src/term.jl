@@ -11,7 +11,8 @@ end
 @inline children(t::Term) = [t[i] for i ∈ eachindex(t)]
 
 function Base.getindex(t::Term, i)
-    @boundscheck isleaf(t) && throw(ArgumentError("leaf nodes have no subterms"))
+    @boundscheck isleaf(t) && throw(BoundsError(t, i))
+    @boundscheck checkbounds(Bool, t.x.args, i) || throw(BoundsError(t, i))
     return convert(Term, t.x.args[i])
 end
 Base.getindex(t::Term, inds...) = foldl(getindex, inds; init=t)

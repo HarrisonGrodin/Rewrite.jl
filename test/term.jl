@@ -11,7 +11,7 @@ using Test
     @test isleaf(t1)
     @test isempty(eachindex(t1))
     @test isempty(children(t1))
-    @test_throws ArgumentError t1[1]
+    @test_throws BoundsError(t1, 1) t1[1]
 
     t2 = @term(k)
     @test root(t2) === k
@@ -33,9 +33,9 @@ using Test
     @test t4[1] == @term(+)
     @test t4[2] == @term(x^2)
     @test t4[2,3] == t4[2][3] == @term(2)
-    @test_throws ArgumentError t4[2,3,4]
+    @test_throws BoundsError(t4[2,3], 4) t4[2,3,4]
     @test t4[3] == @term(k)
-    @test_throws BoundsError t4[4]
+    @test_throws BoundsError(t4, 5) t4[5]
 
     t5 = @term(x^$(1+1) + k)
     @test t4 == t5
