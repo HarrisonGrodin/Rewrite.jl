@@ -7,8 +7,15 @@ struct Term
 end
 
 @inline isleaf(t::Term) = !isa(t.x, Expr)
-@inline root(t::Term)     = !isleaf(t) ? t.x.head                 : t.x
-@inline children(t::Term) = !isleaf(t) ? convert.(Term, t.x.args) : Term[]
+@inline root(t::Term) = isleaf(t) ? t.x : t.x.head
+@inline children(t::Term) = [t[i] for i ∈ eachindex(t)]
+
+function Base.getindex(t::Term, i)
+    @boundscheck isleaf(t) && throw(ArgumentError("leaf nodes have no subterms"))
+    return convert(Term, t.x.args[i])
+end
+Base.getindex(t::Term, inds...) = foldl(getindex, inds; init=t)
+Base.eachindex(t::Term) = isleaf(t) ? Base.OneTo(0) : eachindex(t.x.args)
 
 Base.convert(::Type{Term}, t::Term) = t
 Base.convert(::Type{Term}, x) = Term(x)
