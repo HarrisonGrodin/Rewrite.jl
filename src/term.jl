@@ -29,14 +29,6 @@ Base.length(t::Term) = length(eachindex(t))
 end
 Base.getindex(t::Term, inds...) = foldl(getindex, inds; init=t)
 
-function _iter(t::Term, next)
-    next === nothing && return
-    i, state = next
-    return (t[i], state)
-end
-Base.iterate(t::Term) = _iter(t, iterate(eachindex(t)))
-Base.iterate(t::Term, state) = _iter(t, iterate(eachindex(t), state))
-
 function Base.map(f, t::Term)
     isa(t.x, Expr) || return t
 
