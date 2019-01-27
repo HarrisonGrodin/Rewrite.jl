@@ -101,3 +101,16 @@ end
         @test match(p, convert(Term, :([a, a, b]))) === nothing
     end
 end
+
+@testset "Substitution" begin
+    x, y = Variable(), Variable()
+    σ = match(@term(x + abs(y^3)), @term(2 + abs((-4)^3)))
+    @test σ(@term(x + abs(y)^3)) == @term(2 + abs(-4)^3)
+    @test σ[x] == @term(2)
+    @test σ[y] == @term(-4)
+
+    d = Dict(σ)
+    @test typeof(d) <: Dict{Variable,Term}
+    @test d[x] == @term(2)
+    @test d[y] == @term(-4)
+end

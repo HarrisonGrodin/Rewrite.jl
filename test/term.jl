@@ -7,6 +7,7 @@ using Test
     k = 7.8
 
     t1 = @term(x)
+    @test t1 == Term(x)
     @test root(t1) === x
     @test isleaf(t1)
     @test isempty(eachindex(t1))
@@ -14,18 +15,21 @@ using Test
     @test_throws BoundsError(t1, 1) t1[1]
 
     t2 = @term(k)
+    @test t2 == Term(k)
     @test root(t2) === k
     @test isleaf(t2)
     @test isempty(eachindex(t2))
     @test isempty(children(t2))
 
     t3 = @term("test")
+    @test t3 == Term("test")
     @test root(t3) == "test"
     @test isleaf(t3)
     @test isempty(eachindex(t3))
     @test isempty(children(t3))
 
     t4 = @term(x^2 + k)
+    @test t4 == Term(:call, [Term(+), Term(:call, [Term(^), x, 2]), Term(k, [])])
     @test root(t4) === :call
     @test !isleaf(t4)
     @test eachindex(t4) == 1:3
