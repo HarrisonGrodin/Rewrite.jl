@@ -72,10 +72,10 @@ p = @term(2 ^ x - 1)
 Given a pattern `p::Term` and a subject `s::Term` of the same structure, we can generate a substitution `σ::Substitution` such that applying the substitution to `p` results in `s`, or `σ(p) == s`, as follows.
 
 ```julia
-s = @term(2 ^ (sin(π / 2) + 3) - 1)
+s = @term(2 ^ (sin(3 / 2) + 3) - 1)
 σ = match(p, s)
 
-@assert σ[x] == @term(sin(π / 2) + 3)
+@assert σ[x] == @term(sin(3 / 2) + 3)
 @assert σ(p) == s
 ```
 

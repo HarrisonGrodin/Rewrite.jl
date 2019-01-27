@@ -44,13 +44,13 @@ macro term(ex)
     _term(ex)
 end
 function _term(ex)
-    isa(ex, Expr) || return _unwrap_ex(ex)
+    isa(ex, Expr)  || return _unwrap_ex(ex)
     ex.head === :$ && return _unwrap_ex(ex.args[1])
     ex.head === :. && return _unwrap_ex(ex)
     return :(Term($(Meta.quot(ex.head)), Term[$(_term.(ex.args)...)]))
 end
-_unwrap_ex(ex) = :(_unwrap($(esc(ex))))
-_unwrap(t) = convert(Term, t)
+_unwrap_ex(ex) = :(unwrap($(esc(ex))))
+unwrap(t) = convert(Term, t)
 
 
 function _show(f::Function)
