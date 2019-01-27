@@ -6,16 +6,16 @@ export match
 mutable struct Variable end
 
 
-struct Substitution <: AbstractDict{Variable,Any}
-    dict::Dict{Variable,Any}
+struct Substitution <: AbstractDict{Variable,Term}
+    dict::Dict{Variable,Term}
 end
-Substitution() = Substitution(Dict{Variable,Any}())
+Substitution() = Substitution(Dict{Variable,Term}())
 (σ::Substitution)(t) = replace(t, σ)
 Base.length(σ::Substitution) = length(σ.dict)
 Base.iterate(σ::Substitution) = iterate(σ.dict)
 Base.iterate(σ::Substitution, state) = iterate(σ.dict, state)
 Base.keys(σ::Substitution) = keys(σ.dict)
-Base.getindex(σ::Substitution, keys...) = Term(getindex(σ.dict, keys...))
+Base.getindex(σ::Substitution, keys...) = getindex(σ.dict, keys...)
 Base.setindex!(σ::Substitution, val, keys...) = (setindex!(σ.dict, val, keys...); σ)
 Base.get(σ::Substitution, key, default) = get(σ.dict, key, default)
 
@@ -52,16 +52,14 @@ julia> subject2 = @term(-6 + abs(-5));
 julia> match(pattern, subject2)
 ```
 """
-Base.match(pattern::Term, subject::Term) = _match!(Substitution(), pattern.x, subject.x)
+Base.match(pattern::Term, subject::Term) = _match!(Substitution(), pattern, subject)
 
-function _match!(σ::Substitution, p, s)
-    if isa(p, Variable)
-        haskey(σ, p) && return isequal(σ[p].x, s) ? σ : nothing
-        return setindex!(σ, s, p)  # σ[p] = s
+function _match!(σ::Substitution, p::Term, s::Term)
+    if isa(p.head, Variable)
+        x = p.head
+        haskey(σ, x) && return isequal(σ[x], s) ? σ : nothing
+        return setindex!(σ, s, x)  # σ[x] = s
     end
-
-    isa(p, Expr) || return isequal(p, s) ? σ : nothing
-    isa(s, Expr) || return
 
     p.head === s.head                || return
     length(p.args) == length(s.args) || return
