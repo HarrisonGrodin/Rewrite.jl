@@ -25,6 +25,12 @@ t = @term(mod(k ^ 5, 3))  # mod(2 ^ 5, 3)
 @assert children(t) == [@term(mod), @term(k ^ 5), @term 3]
 ```
 
+We can manually build a term using the `Term` constructor.
+```julia
+@assert t == Term(:call, [mod, Term(:call, [^, k, 5]), 3])
+@assert @term(k) == Term(k) == Term(k, [])
+```
+
 Additionally, we can retrieve a subterm using standard indexing notation, `t[inds...]`.
 
 ```julia
@@ -40,7 +46,7 @@ function leaves(t::Term)
 
     ls = Any[]
     for i ∈ eachindex(t)
-        append!(ls, inord(t[i]))
+        append!(ls, leaves(t[i]))
     end
     return ls
 end
