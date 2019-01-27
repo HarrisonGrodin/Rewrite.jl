@@ -2,7 +2,7 @@ export Term, @term
 export isleaf, root, children
 
 
-mutable struct Term
+struct Term
     head::Any
     args::Vector{Term}
 end
@@ -36,14 +36,6 @@ Base.lastindex(t::Term) = last(eachindex(t))
     return t.args[i]
 end
 Base.getindex(t::Term, inds...) = foldl(getindex, inds; init=t)
-
-function Base.setindex!(t::Term, x)
-    x′ = convert(Term, x)
-    t.head = x′.head
-    t.args = x′.args
-    return t
-end
-Base.setindex!(t::Term, x, inds...) = setindex!(getindex(t, inds...), x)
 
 Base.map(f, t::Term) = Term(t.head, map(f, t.args))
 

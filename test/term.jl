@@ -45,32 +45,6 @@ using Test
     @test t4 == t5
 end
 
-@testset "mutability" begin
-    t = @term(sin(3 + 1))
-    @test t == @term(sin(3 + 1))
-
-    t[1] = cos
-    @test t == @term(cos(3 + 1))
-
-    t[2,2] = @term(4)
-    @test t == @term(cos(4 + 1))
-
-    t[2] = 5
-    @test t == @term(cos(5))
-
-    t[] = @term(1 + 2)
-    @test t == @term(1 + 2)
-
-    t[] = 17
-    @test t == @term(17)
-
-    t[] = @term(3)
-    @test t == @term(3)
-
-    t[] = @term(5 + cos(2)^2)
-    @test t== @term(5 + cos(2)^2)
-end
-
 struct WrapperTest
     t::Term
 end
