@@ -37,6 +37,14 @@ Base.lastindex(t::Term) = last(eachindex(t))
 end
 Base.getindex(t::Term, inds...) = foldl(getindex, inds; init=t)
 
+function Base.setindex!(t::Term, x)
+    x′ = convert(Term, x)
+    t.head = x′.head
+    t.args = x′.args
+    return t
+end
+Base.setindex!(t::Term, x, inds...) = setindex!(getindex(t, inds...), x)
+
 Base.map(f, t::Term) = Term(t.head, map(f, t.args))
 
 
