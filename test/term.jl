@@ -106,6 +106,12 @@ end
     @test !isequal(@term(0.0), @term(-0.0))
 end
 
+@testset "replacement" begin
+    @test replace(@term(1 + 2 + 3), Dict(@term(1) => @term(4))) == @term(4 + 2 + 3)
+    @test replace(@term(sin(1 + 2) + 3), Dict(@term(1 + 2) => @term(3))) == @term(sin(3) + 3)
+    @test replace(@term(1 + 2), Dict(@term(1) => @term(1*1))) == @term(1*1 + 2)
+end
+
 @testset "show" begin
     @test sprint(show, @term(2)) == "@term(2)"
     @test sprint(show, @term(-3.7)) == "@term(-3.7)"

@@ -14,14 +14,12 @@ Substitution() = Substitution(Dict{Variable,Term}())
 Base.length(σ::Substitution) = length(σ.dict)
 Base.iterate(σ::Substitution) = iterate(σ.dict)
 Base.iterate(σ::Substitution, state) = iterate(σ.dict, state)
-Base.keys(σ::Substitution) = keys(σ.dict)
-Base.getindex(σ::Substitution, keys...) = getindex(σ.dict, keys...)
+_isvar(t::Term) = isa(root(t), Variable)
+Base.haskey(σ::Substitution, x::Variable) = haskey(σ.dict, x)
+Base.haskey(σ::Substitution, t::Term) = _isvar(t) ? haskey(σ, root(t)) : false
+Base.getindex(σ::Substitution, x::Variable) = σ.dict[x]
+Base.getindex(σ::Substitution, t::Term) = _isvar(t) ? σ[root(t)] : throw(KeyError(x))
 Base.setindex!(σ::Substitution, val, keys...) = (setindex!(σ.dict, val, keys...); σ)
-Base.get(σ::Substitution, key, default) = get(σ.dict, key, default)
-
-
-Base.replace(t::Term, σ::AbstractDict) = convert(Term, _replace(t, σ))
-_replace(t, σ) = isa(root(t), Variable) ? get(σ, root(t), t) : map(x -> replace(x, σ), t)
 
 
 """

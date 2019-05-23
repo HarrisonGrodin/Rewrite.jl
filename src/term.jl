@@ -37,7 +37,11 @@ Base.lastindex(t::Term) = last(eachindex(t))
 end
 Base.getindex(t::Term, inds...) = foldl(getindex, inds; init=t)
 
+Base.hash(t::Term, h::UInt) = hash((t.head, t.args), hash(Term, h))
+
 Base.map(f, t::Term) = Term(t.head, map(f, t.args))
+_replace(σ) = Base.Fix2(replace, σ)
+Base.replace(t::Term, σ::AbstractDict) = haskey(σ, t) ? σ[t] : map(_replace(σ), t)
 
 
 macro term(ex)
