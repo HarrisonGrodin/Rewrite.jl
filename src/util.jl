@@ -1,3 +1,7 @@
+vars(x::Variable) = Set([x])
+priority(::Type{Variable}) = 0
+
+
 compatible(::Nothing, ::Nothing) = false
 compatible(::Dict, ::Nothing) = false
 compatible(::Nothing, ::Dict) = false
@@ -10,6 +14,11 @@ function compatible(p::Dict, q::Dict)
 end
 
 p ⊔ q = compatible(p, q) ? merge(p, q) : nothing
+
+
+struct EmptySubproblem <: AbstractSubproblem end
+Base.iterate(m::Matches{EmptySubproblem}) = (m.p, nothing)
+Base.iterate(::Matches{EmptySubproblem}, ::Any) = nothing
 
 
 @inline _aiterate(p) = (p, ())
