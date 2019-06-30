@@ -5,4 +5,6 @@ include("interface.jl")
 
 include("util.jl")
 
+include("theory/free.jl")
+
 end # module
