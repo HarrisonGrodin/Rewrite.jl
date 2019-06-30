@@ -91,12 +91,12 @@ end
 
 function match(A::FreeMatcher, t::FreeTerm)
     sigma = Dict()
-    automata = AbstractSubproblem[]
-    res = match_aux!(A.m, A, sigma, automata, t)
-    return res ? Matches(sigma, FreeSubproblem((automata...,))) : nothing
+    matchers = AbstractSubproblem[]
+    res = match_aux!(A.m, A, sigma, matchers, t)
+    return res ? Matches(sigma, FreeSubproblem((matchers...,))) : nothing
 end
 
-function match_aux!(m, A, σ, aliens, t)
+function match_aux!(m, A, σ, matchers, t)
     if m.kind === VAR
         x = A.vars[m.idx]
         if haskey(σ, x)
@@ -111,18 +111,18 @@ function match_aux!(m, A, σ, aliens, t)
         isa(t, FreeTerm) || return false
 
         t.root === A.syms[m.idx] || return false
-        for (arg,aux) ∈ zip(t.args, m.args)
-            match_aux!(aux, A, σ, aliens, arg) || return false
+        for (arg, aux) ∈ zip(t.args, m.args)
+            match_aux!(aux, A, σ, matchers, arg) || return false
         end
     else
         alien_match = match(A.aliens[m.idx], t)
         alien_match === nothing && return false
         (P, S) = (alien_match.p, alien_match.s)
-        σ ⊔ P === nothing && return false
-        for (x,t) ∈ P  # FIXME
-            σ[x] = t
-        end
-        push!(aliens, S)
+
+        compatible(σ, P) || return false
+        merge!(σ, P)
+
+        push!(matchers, S)
     end
 
     return true
