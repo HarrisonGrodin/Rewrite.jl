@@ -1,5 +1,7 @@
 export FreeTerm
 
+using Combinatorics
+
 
 struct FreeTheory <: Theory end
 
@@ -10,6 +12,7 @@ struct FreeTerm <: AbstractTerm
 end
 FreeTerm(root) = FreeTerm(root, Union{Variable,AbstractTerm}[])
 
+theory(::Type{FreeTerm}) = FreeTheory()
 priority(::Type{FreeTerm}) = 1000
 
 vars(t::FreeTerm) = mapreduce(vars, ∪, t.args; init=Set{Variable}())
@@ -48,6 +51,43 @@ struct FreeMatcher <: AbstractMatcher
     syms::Vector{Σ}
     vars::Vector{Variable}
     aliens::Vector{AbstractMatcher}
+    ϕ::Vector{Int}
+end
+
+_Vm(aliens, V) = foldr(fixed, reverse(aliens); init=V)
+function _find_context!(t::FreeTerm, vars, aliens)
+    for arg ∈ t.args
+        if isa(arg, Variable)
+            push!(vars, arg)
+        elseif isa(arg, FreeTerm)
+            _find_context!(arg, vars, aliens)
+        else
+            push!(aliens, arg)
+        end
+    end
+
+    return nothing
+end
+function _find_permutation(aliens, V)
+    # TODO: improve efficiency using monotonicity
+    best = V
+    ϕ = eachindex(aliens)
+
+    for ψ ∈ permutations(eachindex(aliens))
+        Vm = _Vm(aliens[ψ], V)
+        if length(Vm) > length(best)
+            ϕ = ψ
+            best = Vm
+        end
+    end
+
+    return (best, ϕ)
+end
+function fixed(t::FreeTerm, V)
+    vars = Set{Variable}()
+    aliens = AbstractTerm[]
+    _find_context!(t, vars, aliens)
+    _find_permutation(aliens, vars)[1]
 end
 
 function _compile_free(t::FreeTerm, syms, vars, aliens)
@@ -75,13 +115,19 @@ function compile(t::FreeTerm, V)
     syms = Σ[]
     vars = Variable[]
     aliens = AbstractTerm[]
-
     m = _compile_free(t, syms, vars, aliens)
 
-    ϕ = eachindex(aliens)  # TODO: find permutation
-    matchers = map(a -> compile(a, V), aliens)  # TODO: compile with correct sub-V
+    V = V ∪ vars
 
-    FreeMatcher(m, syms, vars, matchers[ϕ])
+    (_, ϕ) = _find_permutation(aliens, V)
+    matchers = similar(aliens, AbstractMatcher)
+    for i ∈ ϕ
+        alien = aliens[i]
+        matchers[i] = compile(alien, V)
+        V = fixed(alien, V)
+    end
+
+    FreeMatcher(m, syms, vars, matchers, ϕ)
 end
 
 
@@ -91,12 +137,26 @@ end
 
 function match(A::FreeMatcher, t::FreeTerm)
     sigma = Dict()
-    matchers = AbstractSubproblem[]
-    res = match_aux!(A.m, A, sigma, matchers, t)
-    return res ? Matches(sigma, FreeSubproblem((matchers...,))) : nothing
+    aliens = similar(A.aliens, AbstractTerm)
+    subproblems = similar(A.aliens, AbstractSubproblem)
+    res = match_aux!(A.m, A, sigma, aliens, t)
+
+    for (i, j) ∈ enumerate(A.ϕ)
+        matcher = A.aliens[j]
+        alien = aliens[j]
+
+        a_match = match(matcher, alien)
+        a_match === nothing && return false
+
+        compatible(σ, a_match.p) || return false
+        merge!(σ, a_match.p)
+        subproblems[i] = a_match.s
+    end
+
+    return res ? Matches(sigma, FreeSubproblem((subproblems...,))) : nothing
 end
 
-function match_aux!(m, A, σ, matchers, t)
+function match_aux!(m, A, σ, aliens, t)
     if m.kind === VAR
         x = A.vars[m.idx]
         if haskey(σ, x)
@@ -112,17 +172,10 @@ function match_aux!(m, A, σ, matchers, t)
 
         t.root === A.syms[m.idx] || return false
         for (arg, aux) ∈ zip(t.args, m.args)
-            match_aux!(aux, A, σ, matchers, arg) || return false
+            match_aux!(aux, A, σ, aliens, arg) || return false
         end
     else
-        alien_match = match(A.aliens[m.idx], t)
-        alien_match === nothing && return false
-        (P, S) = (alien_match.p, alien_match.s)
-
-        compatible(σ, P) || return false
-        merge!(σ, P)
-
-        push!(matchers, S)
+        push!(aliens, t)
     end
 
     return true

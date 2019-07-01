@@ -11,6 +11,7 @@ struct CTerm <: AbstractTerm
     CTerm(root, s, t) = s >ₜ t ? new(root, t, s) : new(root, s, t)
 end
 
+theory(::Type{CTerm}) = CTheory()
 priority(::Type{CTerm}) = 20
 
 vars(t::CTerm) = vars(t.α) ∪ vars(t.β)
@@ -29,10 +30,22 @@ struct CMatcher <: AbstractMatcher
     t::Union{Variable,AbstractMatcher}
 end
 
+function fixed(t::CTerm, V)
+    vars(t.α) ⊆ V && return fixed(t.β, V)
+    vars(t.β) ⊆ V && return fixed(t.α, V)
+
+    isa(t.α, AbstractTerm) & isa(t.β, AbstractTerm) || return V
+    theory(t.α) === theory(t.β) && return V
+
+    αβ = fixed(t.β, fixed(t.α, V))
+    βα = fixed(t.α, fixed(t.β, V))
+    length(βα) > length(αβ) ? βα : αβ
+end
+
 function compile(t::CTerm, V)
     cα = compile(t.α, V)
     cβ = compile(t.β, V)
-    return CMatcher(t.root, cα, cβ)  # TODO
+    return vars(t.β) ⊆ V ? CMatcher(t.root, cβ, cα) : CMatcher(t.root, cα, cβ)
 end
 
 

@@ -14,6 +14,13 @@ abstract type AbstractSubproblem end
 
 
 """
+    theory(T::Type{<:AbstractTerm}) -> Theory
+
+Produce the theory which contains type `T`.
+"""
+function theory end
+
+"""
     vars(t::AbstractTerm) -> Set{Variable}
 
 Produce the set of variables which appear as subterms of `t`.
@@ -45,7 +52,19 @@ function >ₜ end
 
 
 """
+    fixed(pattern::AbstractTerm, V::Set{Variable}) -> Set{Variable}
 
+Given that all variables in `V` are bound, produce the set of variables which must be
+bound after matching a term against `pattern`.
+
+!!! note
+
+    The `fixed` function should adhere to the following monotonicity property.
+    ```math
+        fixed(t, V₁) ∪ fixed(t, V₂) ⊆ fixed(t, V₁ ∪ V₂)
+    ```
+"""
+function fixed end
 
 """
     compile(t::AbstractTerm [, V::Set{Variable} = Set()]) -> AbstractMatcher

@@ -1,5 +1,11 @@
 vars(x::Variable) = Set([x])
 priority(::Type{Variable}) = 0
+fixed(x::Variable, V) = union!(Set([x]), V)
+compile(x::Variable, V) = x
+
+>ₜ(::Variable, ::AbstractTerm) = false
+>ₜ(::AbstractTerm, ::Variable) = true
+>ₜ(x::Variable, y::Variable) = objectid(x) > objectid(y)
 
 
 compatible(::Nothing, ::Nothing) = false
