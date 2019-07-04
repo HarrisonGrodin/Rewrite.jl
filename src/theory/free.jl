@@ -38,6 +38,11 @@ function (a::FreeTerm >ₜ b::FreeTerm)
     return false
 end
 
+function Base.hash(t::FreeTerm, h::UInt)
+    init = hash(t.root, hash(FreeTerm, h))
+    foldr(hash, t.args; init=init)
+end
+
 
 @enum FreeKind VAR NODE ALIEN
 struct FreeAux
@@ -136,27 +141,29 @@ struct FreeSubproblem <: AbstractSubproblem
 end
 
 function match(A::FreeMatcher, t::FreeTerm)
-    sigma = Dict()
+    σ = Dict()
     aliens = similar(A.aliens, AbstractTerm)
     subproblems = similar(A.aliens, AbstractSubproblem)
-    res = match_aux!(A.m, A, sigma, aliens, t)
+    aliens_found = Ref(0)
+    match_aux!(A.m, A, σ, aliens, aliens_found, t) || return nothing
+    aliens_found[] == length(A.aliens) || return nothing
 
     for (i, j) ∈ enumerate(A.ϕ)
         matcher = A.aliens[j]
         alien = aliens[j]
 
         a_match = match(matcher, alien)
-        a_match === nothing && return false
+        a_match === nothing && return nothing
 
-        compatible(σ, a_match.p) || return false
+        compatible(σ, a_match.p) || return nothing
         merge!(σ, a_match.p)
         subproblems[i] = a_match.s
     end
 
-    return res ? Matches(sigma, FreeSubproblem((subproblems...,))) : nothing
+    Matches(σ, FreeSubproblem((subproblems...,)))
 end
 
-function match_aux!(m, A, σ, aliens, t)
+function match_aux!(m, A, σ, aliens, aliens_found, t)
     if m.kind === VAR
         x = A.vars[m.idx]
         if haskey(σ, x)
@@ -172,10 +179,11 @@ function match_aux!(m, A, σ, aliens, t)
 
         t.root === A.syms[m.idx] || return false
         for (arg, aux) ∈ zip(t.args, m.args)
-            match_aux!(aux, A, σ, aliens, arg) || return false
+            match_aux!(aux, A, σ, aliens, aliens_found, arg) || return false
         end
     else
-        push!(aliens, t)
+        aliens[m.idx] = t
+        aliens_found[] += 1
     end
 
     return true

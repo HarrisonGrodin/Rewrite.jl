@@ -23,6 +23,8 @@ function (a::CTerm >ₜ b::CTerm)
     return a.α >ₜ b.α || (a.α == b.α && a.β >ₜ b.β)
 end
 
+Base.hash(t::CTerm, h::UInt) = hash(t.β, hash(t.α, hash(t.root, hash(CTerm, h))))
+
 
 struct CMatcher <: AbstractMatcher
     root::Σ
