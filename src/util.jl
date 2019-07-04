@@ -2,6 +2,14 @@ vars(x::Variable) = Set([x])
 priority(::Type{Variable}) = 0
 fixed(x::Variable, V) = union!(Set([x]), V)
 compile(x::Variable, V) = x
+@inline function match!(σ, x::Variable, t::AbstractTerm)
+    if haskey(σ, x)
+        σ[x] == t || return nothing
+    else
+        σ[x] = t
+        return Matches(σ, EmptySubproblem())
+    end
+end
 
 >ₜ(::Variable, ::AbstractTerm) = false
 >ₜ(::AbstractTerm, ::Variable) = true

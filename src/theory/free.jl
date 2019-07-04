@@ -140,8 +140,7 @@ struct FreeSubproblem <: AbstractSubproblem
     subproblems
 end
 
-function match(A::FreeMatcher, t::FreeTerm)
-    σ = Dict()
+function match!(σ, A::FreeMatcher, t::FreeTerm)
     aliens = similar(A.aliens, AbstractTerm)
     subproblems = similar(A.aliens, AbstractSubproblem)
     aliens_found = Ref(0)
@@ -152,7 +151,7 @@ function match(A::FreeMatcher, t::FreeTerm)
         matcher = A.aliens[j]
         alien = aliens[j]
 
-        a_match = match(matcher, alien)
+        a_match = match!(σ, matcher, alien)
         a_match === nothing && return nothing
 
         compatible(σ, a_match.p) || return nothing

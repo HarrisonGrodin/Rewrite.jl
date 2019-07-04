@@ -87,7 +87,14 @@ Base.IteratorSize(::Type{<:Matches}) = Base.SizeUnknown()
 Match `term` against `pattern`, producing an iterator containing all matches if the process
 may succeed and `nothing` otherwise.
 """
-match(::AbstractMatcher, ::AbstractTerm) = nothing
+match(p::AbstractMatcher, t::AbstractTerm) = match!(Dict{Variable,AbstractTerm}(), p, t)
 match(p::AbstractTerm, s::AbstractTerm) = match(compile(p), s)
-match(x::Variable, t::AbstractTerm) =
-    Matches(Dict{Variable,AbstractTerm}(x => t), EmptySubproblem())
+
+"""
+    match!(σ, pattern::AbstractMatcher, term::AbstractTerm)
+
+Match `term` against `pattern` given the partial substitution `σ`, mutating `σ`
+appropriately and producing an iterator containing all matches if the process may succeed
+and `nothing` otherwise.
+"""
+match!(::Any, ::AbstractMatcher, ::AbstractTerm) = nothing

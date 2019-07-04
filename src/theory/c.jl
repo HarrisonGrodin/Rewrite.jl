@@ -58,30 +58,26 @@ end
 @inline _filter_nothing() = ()
 @inline _filter_nothing(::Nothing, xs...) = _filter_nothing(xs...)
 @inline _filter_nothing(x, xs...) = (x, _filter_nothing(xs...)...)
-function _match_c(s, t, α, β)
+function _match_c(σ, s, t, α, β)
     subproblems = AbstractSubproblem[]
+    σ′ = copy(σ)
 
-    x1 = match(s, α)
+    x1 = match!(σ′, s, α)
     x1 === nothing && return nothing
 
-    x2 = match(t, β)
+    x2 = match!(σ′, t, β)
     x2 === nothing && return nothing
 
-    compatible(x1.p, x2.p) || return nothing
-    p = x1.p
-    merge!(p, x2.p)
-
-    return (p, (x1.s, x2.s))
+    return (σ′, (x1.s, x2.s))
 end
-function match(A::CMatcher, t::CTerm)
+function match!(σ, A::CMatcher, t::CTerm)
     A.root == t.root || return nothing
 
-    a = _match_c(A.s, A.t, t.α, t.β)
-    b = _match_c(A.s, A.t, t.β, t.α)
+    a = _match_c(σ, A.s, A.t, t.α, t.β)
+    b = _match_c(σ, A.s, A.t, t.β, t.α)
 
     a === nothing && b === nothing && return nothing
 
-    σ = Dict()
     return Matches(σ, CSubproblem(_filter_nothing(a, b)))
 end
 
