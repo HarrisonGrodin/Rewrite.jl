@@ -137,7 +137,7 @@ end
 
 
 struct FreeSubproblem <: AbstractSubproblem
-    subproblems
+    subproblems::Vector{AbstractSubproblem}
 end
 
 function match!(σ, A::FreeMatcher, t::FreeTerm)
@@ -159,7 +159,7 @@ function match!(σ, A::FreeMatcher, t::FreeTerm)
         subproblems[i] = a_match.s
     end
 
-    Matches(σ, FreeSubproblem((subproblems...,)))
+    Matches(σ, FreeSubproblem(subproblems))
 end
 
 function match_aux!(m, A, σ, aliens, aliens_found, t)

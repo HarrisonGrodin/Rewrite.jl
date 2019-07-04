@@ -27,8 +27,6 @@ function compatible(p::Dict, q::Dict)
     return true
 end
 
-p ⊔ q = compatible(p, q) ? merge(p, q) : nothing
-
 
 struct EmptySubproblem <: AbstractSubproblem end
 Base.iterate(m::Matches{EmptySubproblem}) = (m.p, nothing)

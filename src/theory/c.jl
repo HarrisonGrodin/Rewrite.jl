@@ -52,12 +52,15 @@ end
 
 
 struct CSubproblem <: AbstractSubproblem
-    subproblems
+    subproblems::Vector{Tuple{Substitution,Tuple{AbstractSubproblem,AbstractSubproblem}}}
 end
 
-@inline _filter_nothing() = ()
-@inline _filter_nothing(::Nothing, xs...) = _filter_nothing(xs...)
-@inline _filter_nothing(x, xs...) = (x, _filter_nothing(xs...)...)
+@inline function _filter_nothing(a, b)
+    subproblems = Tuple{Substitution,Tuple{AbstractSubproblem,AbstractSubproblem}}[]
+    a === nothing || push!(subproblems, a)
+    b === nothing || push!(subproblems, b)
+    return subproblems
+end
 function _match_c(σ, s, t, α, β)
     subproblems = AbstractSubproblem[]
     σ′ = copy(σ)
@@ -91,8 +94,8 @@ function Base.iterate(iter::Matches{CSubproblem})
         i += 1
         i ≤ length(iter.s.subproblems) || return nothing
         (P₀, problems) = iter.s.subproblems[i]
-        P₁ = P₀ ⊔ iter.p
-        P₁ === nothing && (i += 1; continue)
+        compatible(P₀, iter.p) || (i += 1; continue)
+        P₁ = merge(P₀, iter.p)
         next = _aiterate(P₁, problems...)
     end
 
@@ -106,8 +109,8 @@ function Base.iterate(iter::Matches{CSubproblem}, (i, P₁, problems, states))
         i += 1
         i ≤ length(iter.s.subproblems) || return nothing
         (P₀, problems) = iter.s.subproblems[i]
-        P₁ = P₀ ⊔ iter.p
-        P₁ === nothing && (i += 1; continue)
+        compatible(P₀, iter.p) || (i += 1; continue)
+        P₁ = merge(P₀, iter.p)
         next = _aiterate(P₁, problems...)
     end
 

@@ -75,8 +75,9 @@ function compile end
 compile(t) = compile(t, Set{Variable}())
 
 
+const Substitution = Dict{Variable,AbstractTerm}
 struct Matches{S<:AbstractSubproblem}
-    p::Dict
+    p::Substitution
     s::S
 end
 Base.IteratorSize(::Type{<:Matches}) = Base.SizeUnknown()
@@ -87,7 +88,7 @@ Base.IteratorSize(::Type{<:Matches}) = Base.SizeUnknown()
 Match `term` against `pattern`, producing an iterator containing all matches if the process
 may succeed and `nothing` otherwise.
 """
-match(p::AbstractMatcher, t::AbstractTerm) = match!(Dict{Variable,AbstractTerm}(), p, t)
+match(p::AbstractMatcher, t::AbstractTerm) = match!(Substitution(), p, t)
 match(p::AbstractTerm, s::AbstractTerm) = match(compile(p), s)
 
 """
