@@ -28,6 +28,11 @@ function compatible(p::Dict, q::Dict)
 end
 
 
+struct Fail end
+Base.iterate(::Fail) = nothing
+const fail = Fail()
+
+
 struct EmptySubproblem <: AbstractSubproblem end
 Base.iterate(m::Matches{EmptySubproblem}) = (m.p, nothing)
 Base.iterate(::Matches{EmptySubproblem}, ::Any) = nothing
