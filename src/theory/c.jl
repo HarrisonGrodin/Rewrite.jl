@@ -55,53 +55,54 @@ struct CSubproblem <: AbstractSubproblem
     subproblems::Vector{Tuple{Substitution,Tuple{AbstractSubproblem,AbstractSubproblem}}}
 end
 
-@inline function _filter_nothing(a, b)
-    subproblems = Tuple{Substitution,Tuple{AbstractSubproblem,AbstractSubproblem}}[]
-    a === nothing || push!(subproblems, a)
-    b === nothing || push!(subproblems, b)
-    return subproblems
-end
-function _match_c(σ, s, t, α, β)
-    subproblems = AbstractSubproblem[]
+function _match_c!(subproblems, σ, s, t, α, β)
     σ′ = copy(σ)
 
     x1 = match!(σ′, s, α)
-    x1 === nothing && return nothing
+    x1 === nothing && return
 
     x2 = match!(σ′, t, β)
-    x2 === nothing && return nothing
+    x2 === nothing && return
 
-    return (σ′, (x1.s, x2.s))
+    push!(subproblems, (σ′, (x1, x2)))
+
+    nothing
 end
 function match!(σ, A::CMatcher, t::CTerm)
     A.root == t.root || return nothing
 
-    a = _match_c(σ, A.s, A.t, t.α, t.β)
-    b = _match_c(σ, A.s, A.t, t.β, t.α)
+    subproblems = Tuple{Substitution,Tuple{AbstractSubproblem,AbstractSubproblem}}[]
 
-    a === nothing && b === nothing && return nothing
+    _match_c!(subproblems, σ, A.s, A.t, t.α, t.β)
+    _match_c!(subproblems, σ, A.s, A.t, t.β, t.α)
 
-    return CSubproblem(_filter_nothing(a, b))
+    isempty(subproblems) && return nothing
+
+    return CSubproblem(subproblems)
 end
 
 
-function Base.iterate(iter::Matches{CSubproblem})
-    i = 0
-    next = nothing
-    local P₁, problems
-
-    while next === nothing
-        i += 1
-        i ≤ length(iter.s.subproblems) || return nothing
-        (P₀, problems) = iter.s.subproblems[i]
-        compatible(P₀, iter.p) || (i += 1; continue)
-        P₁ = merge(P₀, iter.p)
-        next = _aiterate(P₁, problems...)
-    end
-
+function _iterate_c_aux(p, P₀, problems, i)
+    compatible(P₀, p) || return nothing
+    P₁ = merge(P₀, p)
+    next = _aiterate(P₁, problems...)
+    next === nothing && return nothing
     (P, states) = next
     return (P, (i, P₁, problems, states))
 end
+function Base.iterate(iter::Matches{CSubproblem})
+    i = 1
+
+    while i ≤ length(iter.s.subproblems)
+        (P₀, problems) = iter.s.subproblems[i]
+        res = _iterate_c_aux(iter.p, P₀, problems, i)
+        res === nothing && (i += 1; continue)
+        return res
+    end
+
+    return nothing
+end
+
 function Base.iterate(iter::Matches{CSubproblem}, (i, P₁, problems, states))
     next = _aiterate1(P₁, problems, states)
 

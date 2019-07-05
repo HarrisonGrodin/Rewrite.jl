@@ -141,12 +141,16 @@ struct FreeSubproblem <: AbstractSubproblem
 end
 
 function match!(σ, A::FreeMatcher, t::FreeTerm)
-    aliens = similar(A.aliens, AbstractTerm)
-    subproblems = similar(A.aliens, AbstractSubproblem)
-    aliens_found = Ref(0)
-    match_aux!(A.m, A, σ, aliens, aliens_found, t) || return nothing
-    aliens_found[] == length(A.aliens) || return nothing
+    if isempty(A.aliens)
+        match_aux!(A.m, A, σ, nothing, t) === 0 || return nothing
+        return EmptySubproblem()
+    end
 
+    aliens = similar(A.aliens, AbstractTerm)
+    aliens_found = match_aux!(A.m, A, σ, aliens, t)
+    aliens_found === length(A.aliens) || return nothing
+
+    subproblems = similar(A.aliens, AbstractSubproblem)
     for (i, j) ∈ enumerate(A.ϕ)
         matcher = A.aliens[j]
         alien = aliens[j]
@@ -159,30 +163,30 @@ function match!(σ, A::FreeMatcher, t::FreeTerm)
     FreeSubproblem(subproblems)
 end
 
-function match_aux!(m, A, σ, aliens, aliens_found, t)
+function match_aux!(m, A, σ, aliens, t)
     if m.kind === VAR
         x = A.vars[m.idx]
         if haskey(σ, x)
-            σ[x] == t || return false
+            σ[x] == t || return -1
         else
             σ[x] = t
         end
-        return true
+        return 0
     end
 
     if m.kind === NODE
-        isa(t, FreeTerm) || return false
+        isa(t, FreeTerm) || return -1
 
-        t.root === A.syms[m.idx] || return false
+        t.root === A.syms[m.idx] || return -1
+        res = 0
         for (arg, aux) ∈ zip(t.args, m.args)
-            match_aux!(aux, A, σ, aliens, aliens_found, arg) || return false
+            res += match_aux!(aux, A, σ, aliens, arg)
         end
+        return res
     else
         aliens[m.idx] = t
-        aliens_found[] += 1
+        return 1
     end
-
-    return true
 end
 
 
