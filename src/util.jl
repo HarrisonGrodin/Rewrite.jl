@@ -7,8 +7,8 @@ compile(x::Variable, V) = x
         σ[x] == t || return nothing
     else
         σ[x] = t
-        return Matches(σ, EmptySubproblem())
     end
+    return EmptySubproblem()
 end
 
 >ₜ(::Variable, ::AbstractTerm) = false

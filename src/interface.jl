@@ -86,16 +86,20 @@ Base.IteratorSize(::Type{<:Matches}) = Base.SizeUnknown()
     match(pattern::AbstractMatcher, term::AbstractTerm)
 
 Match `term` against `pattern`, producing an iterator containing all matches if the process
-may succeed and `nothing` otherwise.
+may succeed or `nothing` otherwise.
 """
-match(p::AbstractMatcher, t::AbstractTerm) = match!(Substitution(), p, t)
+function match(p::AbstractMatcher, t::AbstractTerm)
+    σ = Substitution()
+    s = match!(σ, p, t)
+    s === nothing && return nothing
+    Matches(σ, s)
+end
 match(p::AbstractTerm, s::AbstractTerm) = match(compile(p), s)
 
 """
-    match!(σ, pattern::AbstractMatcher, term::AbstractTerm)
+    match!(σ, pattern::AbstractMatcher, term::AbstractTerm) -> AbstractSubproblem
 
 Match `term` against `pattern` given the partial substitution `σ`, mutating `σ`
-appropriately and producing an iterator containing all matches if the process may succeed
-and `nothing` otherwise.
+appropriately and producing a subproblem to solve or producing `nothing` otherwise.
 """
 match!(::Any, ::AbstractMatcher, ::AbstractTerm) = nothing

@@ -81,7 +81,7 @@ function match!(σ, A::CMatcher, t::CTerm)
 
     a === nothing && b === nothing && return nothing
 
-    return Matches(σ, CSubproblem(_filter_nothing(a, b)))
+    return CSubproblem(_filter_nothing(a, b))
 end
 
 

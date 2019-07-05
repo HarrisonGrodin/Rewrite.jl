@@ -153,13 +153,10 @@ function match!(σ, A::FreeMatcher, t::FreeTerm)
 
         a_match = match!(σ, matcher, alien)
         a_match === nothing && return nothing
-
-        compatible(σ, a_match.p) || return nothing
-        merge!(σ, a_match.p)
-        subproblems[i] = a_match.s
+        subproblems[i] = a_match
     end
 
-    Matches(σ, FreeSubproblem(subproblems))
+    FreeSubproblem(subproblems)
 end
 
 function match_aux!(m, A, σ, aliens, aliens_found, t)
