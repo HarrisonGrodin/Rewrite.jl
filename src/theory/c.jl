@@ -45,9 +45,18 @@ function fixed(t::CTerm, V)
 end
 
 function compile(t::CTerm, V)
-    cα = compile(t.α, V)
-    cβ = compile(t.β, V)
-    return vars(t.β) ⊆ V ? CMatcher(t.root, cβ, cα) : CMatcher(t.root, cα, cβ)
+    αβ = fixed(t.β, fixed(t.α, V))
+    βα = fixed(t.α, fixed(t.β, V))
+
+    if length(βα) > length(αβ)
+        cβ = compile(t.β, V)
+        cα = compile(t.α, fixed(t.β, V))
+        return CMatcher(t.root, cβ, cα)
+    else
+        cα = compile(t.α, V)
+        cβ = compile(t.β, fixed(t.α, V))
+        return CMatcher(t.root, cα, cβ)
+    end
 end
 
 

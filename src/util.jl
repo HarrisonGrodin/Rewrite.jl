@@ -1,5 +1,4 @@
 vars(x::Variable) = Set([x])
-priority(::Type{Variable}) = 0
 fixed(x::Variable, V) = union!(Set([x]), V)
 compile(x::Variable, V) = x
 @inline function match!(σ, x::Variable, t::AbstractTerm)
@@ -16,9 +15,6 @@ end
 >ₜ(x::Variable, y::Variable) = objectid(x) > objectid(y)
 
 
-compatible(::Nothing, ::Nothing) = false
-compatible(::Dict, ::Nothing) = false
-compatible(::Nothing, ::Dict) = false
 function compatible(p::Dict, q::Dict)
     length(p) < length(q) && ((p, q) = (q, p))
     for (x, t) ∈ q

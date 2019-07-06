@@ -19,6 +19,7 @@ abstract type AbstractSubproblem end
 Produce the theory which contains type `T`.
 """
 function theory end
+theory(t::T) where {T<:AbstractTerm} = theory(T)
 
 """
     vars(t::AbstractTerm) -> Set{Variable}
@@ -39,8 +40,7 @@ Priority of a term type, used to produce a total ordering over terms.
     distinct priority.
 """
 function priority end
-priority(::Type{T}) where {T<:AbstractTerm} = error("Priority undefined for: $T")
-priority(t) = priority(typeof(t))
+priority(t::T) where {T<:AbstractTerm} = priority(T)
 
 """
     s::AbstractTerm >ₜ t::AbstractTerm -> Bool
