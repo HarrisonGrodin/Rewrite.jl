@@ -1,7 +1,11 @@
 module Terms
 
-include("term.jl")
+include("core.jl")
+include("interface.jl")
 
-include("pattern.jl")
+include("theory/free.jl")
+include("theory/c.jl")
+
+include("util.jl")
 
 end # module

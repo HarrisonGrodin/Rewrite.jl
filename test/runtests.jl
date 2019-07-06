@@ -1,28 +1,21 @@
 using Terms
 using Test
 
-
-x = Variable()
-f = Variable()
-const EXPRS = [
-    7,
-    -3.2,
-    π,
-    "hello",
-    x,
-    :(x + 2y),
-    :(x + 2.0y),
-    :(x * "!"^2),
-    :($(Iterators.zip)("string", 3:8)),
-    :(f(x, g(y, z), h(g))),
-    :(f($x, g(y, z), h(g))),
-    :(f($f(x, $x))),
-    :f,
-    :(f()),
-    :(identity(-)(5, 3)),
-    :(a || (b && c)),
-]
+a(xs...) = FreeTerm(:a, collect(xs))
+b(xs...) = FreeTerm(:b, collect(xs))
+c(xs...) = FreeTerm(:c, collect(xs))
+f(xs...) = FreeTerm(:f, collect(xs))
+g(xs...) = FreeTerm(:g, collect(xs))
+h(xs...) = FreeTerm(:h, collect(xs))
+p(x, y) = CTerm(:p, x, y)
+q(x, y) = CTerm(:q, x, y)
+x, y, z = Variable(), Variable(), Variable()
 
 
-@testset "Term"    begin include("term.jl")    end
-@testset "Pattern" begin include("pattern.jl") end
+@testset "construction" begin
+    include("construction.jl")
+end
+
+@testset "match" begin
+    include("match.jl")
+end
