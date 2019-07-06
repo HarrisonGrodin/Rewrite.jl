@@ -30,6 +30,7 @@ end
 
 struct Fail end
 Base.iterate(::Fail) = nothing
+Base.length(::Fail) = 0
 const fail = Fail()
 
 

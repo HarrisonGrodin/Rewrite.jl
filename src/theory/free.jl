@@ -178,6 +178,7 @@ function match_aux!(m, A, σ, aliens, t)
         isa(t, FreeTerm) || return -1
 
         t.root === A.syms[m.idx] || return -1
+        length(t.args) === length(m.args) || return -1
         res = 0
         for (arg, aux) ∈ zip(t.args, m.args)
             res += match_aux!(aux, A, σ, aliens, arg)

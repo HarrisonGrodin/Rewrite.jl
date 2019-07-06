@@ -48,7 +48,7 @@ priority(t) = priority(typeof(t))
 Total ordering on terms.
 """
 function >ₜ end
->ₜ(s::AbstractTerm, t::AbstractTerm) = priority(s) >ₜ priority(t)
+>ₜ(s::AbstractTerm, t::AbstractTerm) = priority(s) > priority(t)
 
 
 """
