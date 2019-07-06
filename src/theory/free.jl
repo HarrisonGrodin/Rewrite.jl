@@ -50,7 +50,6 @@ struct FreeAux
     idx::UInt
     args::Vector{FreeAux}
 end
-FreeAux(kind, idx) = FreeAux(kind, idx, FreeAux[])
 struct FreeMatcher <: AbstractMatcher
     m::FreeAux
     syms::Vector{Σ}

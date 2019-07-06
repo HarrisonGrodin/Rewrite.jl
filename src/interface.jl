@@ -93,7 +93,6 @@ function match(p::AbstractMatcher, t::AbstractTerm)
     s === nothing && return fail
     Matches(σ, s)
 end
-match(p::AbstractTerm, s::AbstractTerm) = match(compile(p), s)
 
 """
     match!(σ, pattern::AbstractMatcher, term::AbstractTerm) -> AbstractSubproblem

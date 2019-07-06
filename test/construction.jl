@@ -5,6 +5,7 @@ end
 
 @testset "free" begin
     @test a() == a()
+    @test FreeTerm(:a, []) == FreeTerm(:a)
     @test a() ≠ b()
     @test f(a(), a()) == f(a(), a())
     @test f(a(), b()) == f(a(), b())
@@ -19,4 +20,5 @@ end
     @test p(a(), b()) ≠ p(a(), c())
     @test p(a(), p(b(), c())) == p(p(c(), b()), a())
     @test p(q(x, a()), q(x, b())) == p(q(b(), x), q(x, a()))
+    @test p(f(a(), b()), f(a(), c())) == p(f(a(), c()), f(a(), b()))
 end
