@@ -42,7 +42,13 @@ Base.iterate(::Matches{EmptySubproblem}, ::Any) = nothing
     (P, states) = restres
 
     thisres = iterate(Matches(P, iter1))
-    thisres === nothing && return nothing
+    while thisres === nothing
+        restres = _aiterate1(p, rest, states)
+        restres === nothing && return nothing
+        (P, states) = restres
+
+        thisres = iterate(Matches(P, iter1))
+    end
     (P′, state) = thisres
 
     return (P′, ((P, state), states...))

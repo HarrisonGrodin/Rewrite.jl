@@ -97,7 +97,7 @@ function _iterate_c_aux(p, P₀, problems, i)
     next = _aiterate(P₁, problems...)
     next === nothing && return nothing
     (P, states) = next
-    return (P, (i, P₁, problems, states))
+    return (P, (i, P₁, states))
 end
 function Base.iterate(iter::Matches{CSubproblem})
     i = 1
@@ -112,8 +112,8 @@ function Base.iterate(iter::Matches{CSubproblem})
     return nothing
 end
 
-function Base.iterate(iter::Matches{CSubproblem}, (i, P₁, problems, states))
-    next = _aiterate1(P₁, problems, states)
+function Base.iterate(iter::Matches{CSubproblem}, (i, P₁, states))
+    next = _aiterate1(P₁, iter.s.subproblems[i][2], states)
 
     while next === nothing
         i += 1
@@ -125,5 +125,5 @@ function Base.iterate(iter::Matches{CSubproblem}, (i, P₁, problems, states))
     end
 
     (P, states) = next
-    return (P, (i, P₁, problems, states))
+    return (P, (i, P₁, states))
 end
