@@ -32,30 +32,20 @@ struct CMatcher <: AbstractMatcher
     t::Union{Variable,AbstractMatcher}
 end
 
-function fixed(t::CTerm, V)
-    vars(t.α) ⊆ V && return fixed(t.β, V)
-    vars(t.β) ⊆ V && return fixed(t.α, V)
-
-    isa(t.α, AbstractTerm) & isa(t.β, AbstractTerm) || return V
-    theory(t.α) === theory(t.β) && return V
-
-    αβ = fixed(t.β, fixed(t.α, V))
-    βα = fixed(t.α, fixed(t.β, V))
-    length(βα) > length(αβ) ? βα : αβ
-end
-
 function compile(t::CTerm, V)
-    αβ = fixed(t.β, fixed(t.α, V))
-    βα = fixed(t.α, fixed(t.β, V))
+    if isa(t.α, Variable) | isa(t.β, Variable) || theory(t.α) === theory(t.β)
+        (cα, _) = compile(t.α, V)
+        (cβ, _) = compile(t.β, V)
+        return CMatcher(t.root, cα, cβ), V
+    end
 
-    if length(βα) > length(αβ)
-        cβ = compile(t.β, V)
-        cα = compile(t.α, fixed(t.β, V))
-        return CMatcher(t.root, cβ, cα)
+    (αβ, V1) = compile_many([t.α, t.β], V)
+    (βα, V2) = compile_many([t.β, t.α], V)
+
+    if length(V2) > length(V1)
+        return CMatcher(t.root, βα[1], βα[2]), V2
     else
-        cα = compile(t.α, V)
-        cβ = compile(t.β, fixed(t.α, V))
-        return CMatcher(t.root, cα, cβ)
+        return CMatcher(t.root, αβ[1], αβ[2]), V1
     end
 end
 
@@ -119,7 +109,7 @@ function Base.iterate(iter::Matches{CSubproblem}, (i, P₁, states))
         i += 1
         i ≤ length(iter.s.subproblems) || return nothing
         (P₀, problems) = iter.s.subproblems[i]
-        compatible(P₀, iter.p) || (i += 1; continue)
+        compatible(P₀, iter.p) || continue
         P₁ = merge(P₀, iter.p)
         next = _aiterate(P₁, problems...)
     end

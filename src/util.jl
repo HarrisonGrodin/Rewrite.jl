@@ -1,6 +1,5 @@
 vars(x::Variable) = Set([x])
-fixed(x::Variable, V) = union!(Set([x]), V)
-compile(x::Variable, V) = x
+compile(x::Variable, V) = (x, union!(Set([x]), V))
 @inline function match!(σ, x::Variable, t::AbstractTerm)
     if haskey(σ, x)
         σ[x] == t || return nothing
@@ -13,6 +12,15 @@ end
 >ₜ(::Variable, ::AbstractTerm) = false
 >ₜ(::AbstractTerm, ::Variable) = true
 >ₜ(x::Variable, y::Variable) = objectid(x) > objectid(y)
+
+
+function compile_many(ps::Vector, V)
+    matchers = similar(ps, Union{AbstractMatcher,Variable})
+    for (i, p) ∈ enumerate(ps)
+        matchers[i], V::Set{Variable} = compile(p, V)
+    end
+    return matchers, V
+end
 
 
 function compatible(p::Dict, q::Dict)

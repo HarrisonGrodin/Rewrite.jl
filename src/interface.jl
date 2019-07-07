@@ -52,27 +52,19 @@ function >ₜ end
 
 
 """
-    fixed(pattern::AbstractTerm, V::Set{Variable}) -> Set{Variable}
+    compile(t::AbstractTerm, V::Set{Variable}) -> Tuple{AbstractMatcher,Set{Variable}}
 
-Given that all variables in `V` are bound, produce the set of variables which must be
-bound after matching a term against `pattern`.
-
-!!! note
-
-    The `fixed` function should adhere to the following monotonicity property.
-    ```math
-        fixed(t, V₁) ∪ fixed(t, V₂) ⊆ fixed(t, V₁ ∪ V₂)
-    ```
-"""
-function fixed end
-
-"""
-    compile(t::AbstractTerm [, V::Set{Variable} = Set()]) -> AbstractMatcher
-
-Compile `t` to a matcher, given that variables `V` will already be matched.
+Compile `t` to a matcher, given that variables `V` will already be matched. Produce a set
+of variables which are guaranteed to be fixed during matching.
 """
 function compile end
-compile(t) = compile(t, Set{Variable}())
+
+"""
+    compile(t::AbstractTerm) -> AbstractMatcher
+
+Compile `t` to a matcher.
+"""
+compile(t) = compile(t, Set{Variable}())[1]
 
 
 const Substitution = Dict{Variable,AbstractTerm}
