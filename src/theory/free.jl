@@ -54,47 +54,11 @@ struct FreeMatcher <: AbstractMatcher
     m::FreeAux
     syms::Vector{Σ}
     vars::Vector{Variable}
-    aliens::Vector{AbstractMatcher}
+    matchers::Vector{AbstractMatcher}
     ϕ::Vector{Int}
 end
 
-_Vm(aliens, V) = foldr(fixed, reverse(aliens); init=V)
-function _find_context!(t::FreeTerm, vars, aliens)
-    for arg ∈ t.args
-        if isa(arg, Variable)
-            push!(vars, arg)
-        elseif isa(arg, FreeTerm)
-            _find_context!(arg, vars, aliens)
-        else
-            push!(aliens, arg)
-        end
-    end
-
-    return nothing
-end
-function _find_permutation(aliens, V)
-    # TODO: improve efficiency using monotonicity
-    best = V
-    ϕ = eachindex(aliens)
-
-    for ψ ∈ permutations(eachindex(aliens))
-        Vm = _Vm(aliens[ψ], V)
-        if length(Vm) > length(best)
-            ϕ = ψ
-            best = Vm
-        end
-    end
-
-    return (best, ϕ)
-end
-function fixed(t::FreeTerm, V)
-    vars = Set{Variable}()
-    aliens = AbstractTerm[]
-    _find_context!(t, vars, aliens)
-    _find_permutation(aliens, vars)[1]
-end
-
-function _compile_free(t::FreeTerm, syms, vars, aliens)
+function _build_free_context!(t::FreeTerm, syms, vars, aliens)
     args = similar(t.args, FreeAux)
     node_idx = findfirst(==(t.root), syms)
     node_idx === nothing && (push!(syms, t.root); node_idx = length(syms))
@@ -106,7 +70,7 @@ function _compile_free(t::FreeTerm, syms, vars, aliens)
             idx === nothing && (push!(vars, arg); idx = length(vars))
             args[i] = FreeAux(VAR, idx, [])
         elseif isa(arg, FreeTerm)
-            args[i] = _compile_free(arg, syms, vars, aliens)
+            args[i] = _build_free_context!(arg, syms, vars, aliens)
         else
             push!(aliens, arg)
             args[i] = FreeAux(ALIEN, length(aliens), [])
@@ -115,23 +79,30 @@ function _compile_free(t::FreeTerm, syms, vars, aliens)
 
     return FreeAux(NODE, node_idx, args)
 end
+
+function _find_permutation(aliens, V)
+    # TODO: improve efficiency using monotonicity
+    matchers, V_best = compile_many(aliens, V)
+    ϕ = eachindex(aliens)
+
+    for ψ ∈ permutations(eachindex(aliens))
+        result, V′ = compile_many(aliens[ψ], V)
+        if length(V′) > length(V_best)
+            (matchers, V_best, ϕ) = (result, num_fixed, ψ)
+        end
+    end
+
+    return (matchers, V_best, ϕ)
+end
+
 function compile(t::FreeTerm, V)
     syms = Σ[]
     vars = Variable[]
     aliens = AbstractTerm[]
-    m = _compile_free(t, syms, vars, aliens)
+    m = _build_free_context!(t, syms, vars, aliens)
 
-    V = V ∪ vars
-
-    (_, ϕ) = _find_permutation(aliens, V)
-    matchers = similar(aliens, AbstractMatcher)
-    for i ∈ ϕ
-        alien = aliens[i]
-        matchers[i] = compile(alien, V)
-        V = fixed(alien, V)
-    end
-
-    FreeMatcher(m, syms, vars, matchers, ϕ)
+    (matchers, V′, ϕ) = _find_permutation(aliens, V ∪ vars)
+    return FreeMatcher(m, syms, vars, matchers, ϕ), V′
 end
 
 
@@ -140,21 +111,18 @@ struct FreeSubproblem <: AbstractSubproblem
 end
 
 function match!(σ, A::FreeMatcher, t::FreeTerm)
-    if isempty(A.aliens)
+    if isempty(A.matchers)
         match_aux!(A.m, A, σ, nothing, t) === 0 || return nothing
         return EmptySubproblem()
     end
 
-    aliens = similar(A.aliens, AbstractTerm)
+    aliens = similar(A.matchers, AbstractTerm)
     aliens_found = match_aux!(A.m, A, σ, aliens, t)
-    aliens_found === length(A.aliens) || return nothing
+    aliens_found === length(A.matchers) || return nothing
 
-    subproblems = similar(A.aliens, AbstractSubproblem)
-    for (i, j) ∈ enumerate(A.ϕ)
-        matcher = A.aliens[j]
-        alien = aliens[j]
-
-        a_match = match!(σ, matcher, alien)
+    subproblems = similar(A.matchers, AbstractSubproblem)
+    for i ∈ A.ϕ
+        a_match = match!(σ, A.matchers[i], aliens[i])
         a_match === nothing && return nothing
         subproblems[i] = a_match
     end
