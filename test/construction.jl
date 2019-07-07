@@ -18,7 +18,10 @@ end
     @test p(a(), b()) == p(a(), b())
     @test p(a(), b()) == p(b(), a())
     @test p(a(), b()) ≠ p(a(), c())
+    @test p(p(a(), b()), c()) ≠ p(a(), p(b(), c()))
     @test p(a(), p(b(), c())) == p(p(c(), b()), a())
+    @test p(p(a(), b()), q(a(), b())) == p(q(a(), b()), p(a(), b()))
+    @test p(p(x, a()), q(x, b())) ≠ p(p(b(), x), q(x, a()))
     @test p(q(x, a()), q(x, b())) == p(q(b(), x), q(x, a()))
     @test p(f(a(), b()), f(a(), c())) == p(f(a(), c()), f(a(), b()))
 end

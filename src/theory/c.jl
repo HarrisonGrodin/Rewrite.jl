@@ -119,7 +119,7 @@ function Base.iterate(iter::Matches{CSubproblem}, (i, P₁, states))
         i += 1
         i ≤ length(iter.s.subproblems) || return nothing
         (P₀, problems) = iter.s.subproblems[i]
-        compatible(P₀, iter.p) || (i += 1; continue)
+        compatible(P₀, iter.p) || continue
         P₁ = merge(P₀, iter.p)
         next = _aiterate(P₁, problems...)
     end
