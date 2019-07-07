@@ -33,8 +33,7 @@ struct CMatcher <: AbstractMatcher
 end
 
 function compile(t::CTerm, V)
-    isa(t.α, Variable) | isa(t.β, Variable) && return (CMatcher(t.root, t.α, t.β), V)
-    if theory(t.α) === theory(t.β)
+    if isa(t.α, Variable) | isa(t.β, Variable) || theory(t.α) === theory(t.β)
         (cα, _) = compile(t.α, V)
         (cβ, _) = compile(t.β, V)
         return CMatcher(t.root, cα, cβ), V
