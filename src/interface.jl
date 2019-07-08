@@ -1,4 +1,4 @@
-export compile
+export compile, replace
 
 
 """
@@ -71,4 +71,4 @@ match!(::Any, ::AbstractMatcher, ::AbstractTerm) = nothing
 
 Replace each variable subterm `x` of `pattern` with `σ[x]`.
 """
-Base.replace(pattern::AbstractTerm, σ::Substitution)
+replace(pattern::AbstractTerm, σ::Substitution)

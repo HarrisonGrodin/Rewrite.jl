@@ -119,4 +119,4 @@ function Base.iterate(iter::Matches{CSubproblem}, (i, P₁, states))
 end
 
 
-Base.replace(p::CTerm, σ) = CTerm(p.root, replace(p.α, σ), replace(p.β, σ))
+replace(p::CTerm, σ) = CTerm(p.root, replace(p.α, σ), replace(p.β, σ))

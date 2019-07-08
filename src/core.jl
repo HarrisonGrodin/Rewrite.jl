@@ -1,4 +1,4 @@
-import Base: match
+import Base: match, replace
 
 export Variable, match
 
@@ -56,6 +56,7 @@ compile(x::Variable, V) = (x, push!(copy(V), x))
     end
     return EmptySubproblem()
 end
+replace(x::Variable, σ) = σ[x]
 
 >ₜ(::Variable, ::AbstractTerm) = false
 >ₜ(::AbstractTerm, ::Variable) = true

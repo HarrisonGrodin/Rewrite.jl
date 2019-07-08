@@ -1,11 +1,7 @@
 export Rule, rewrite
-export Builder
 
 
-struct Builder{T}
-    pattern::T
-end
-(b::Builder)(σ) = replace(b.pattern, σ)
+replace(t::Union{Variable,AbstractTerm}) = Base.Fix1(replace, t)
 
 
 struct Rule{L,R}
