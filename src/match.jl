@@ -22,6 +22,7 @@ function match(p::AbstractMatcher, t::AbstractTerm)
     s === nothing && return fail
     Matches(σ, s)
 end
+match(p::AbstractTerm, t::AbstractTerm) = match(compile(p), t)
 
 
 struct EmptySubproblem <: AbstractSubproblem end

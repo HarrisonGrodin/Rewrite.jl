@@ -1,6 +1,3 @@
-export compile, replace, rewrite
-
-
 """
     theory(T::Type{<:AbstractTerm}) -> AbstractTheory
 

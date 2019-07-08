@@ -219,9 +219,8 @@ TESTS = [
 
 @testset "$set" for (set, tests) ∈ TESTS
     @testset "$pattern" for (pattern, cases) ∈ tests
-        m = compile(pattern)
         @testset "$term" for (term, ms) ∈ cases
-            matches = match(m, term)
+            matches = match(pattern, term)
             @test Set(matches) == Set(matches)  # immutability of iterator
             @test Set(matches) == Set(ms)
         end
