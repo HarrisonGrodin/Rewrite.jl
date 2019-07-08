@@ -17,8 +17,14 @@ function Base.push!(rw::Rewriter, (p, b)::Pair)
     rw
 end
 
+rewrite(rw::Rewriter) = Base.Fix1(rewrite, rw)
 function rewrite(rw::Rewriter, t)
-    th = theory(t)
-    haskey(rw.rewriters, th) || return nothing
-    rewrite(rw.rewriters[th], t)
+    while true
+        th = theory(t)
+        haskey(rw.rewriters, th) || return t
+
+        t′ = rewrite(rw.rewriters[th], map(rewrite(rw), t))
+        t == t′ && return t
+        t = t′
+    end
 end

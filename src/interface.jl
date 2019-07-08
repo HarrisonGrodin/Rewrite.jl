@@ -78,7 +78,7 @@ Produce a fresh rewriter for theory `t`.
 function rewriter end
 
 """
-    rewrite(rw::AbstractRewriter, t::AbstractTerm) -> Union{AbstractTerm,Nothing}
+    rewrite(rw::AbstractRewriter, t::AbstractTerm) -> AbstractTerm
 
 Rewrite `t` using `rw`, producing `nothing` if the process fails.
 """

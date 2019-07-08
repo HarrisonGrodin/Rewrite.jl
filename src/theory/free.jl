@@ -43,6 +43,8 @@ function Base.hash(t::FreeTerm, h::UInt)
     foldr(hash, t.args; init=init)
 end
 
+Base.map(f, t::FreeTerm) = FreeTerm(t.root, map(f, t.args))
+
 
 @enum FreeKind VAR NODE ALIEN
 struct FreeAux
@@ -176,7 +178,7 @@ function Base.push!(rw::FreeRewriter, (p, b)::Pair{FreeTerm})
 end
 
 function rewrite(rw::FreeRewriter, t::FreeTerm)
-    haskey(rw.rules, t.root) || return nothing
+    haskey(rw.rules, t.root) || return t
 
     for (pattern, builder) ∈ rw.rules[t.root]
         next = iterate(match(pattern, t))
@@ -185,5 +187,5 @@ function rewrite(rw::FreeRewriter, t::FreeTerm)
         return builder(σ)::AbstractTerm
     end
 
-    return nothing
+    return t
 end

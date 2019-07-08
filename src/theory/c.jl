@@ -25,6 +25,8 @@ end
 
 Base.hash(t::CTerm, h::UInt) = hash(t.β, hash(t.α, hash(t.root, hash(CTerm, h))))
 
+Base.map(f, t::CTerm) = CTerm(t.root, f(t.α), f(t.β))
+
 
 struct CMatcher <: AbstractMatcher
     root::Σ
@@ -134,7 +136,7 @@ function Base.push!(rw::CRewriter, (p, b)::Pair{CTerm})
 end
 
 function rewrite(rw::CRewriter, t::CTerm)
-    haskey(rw.rules, t.root) || return nothing
+    haskey(rw.rules, t.root) || return t
 
     for (pattern, builder) ∈ rw.rules[t.root]
         next = iterate(match(pattern, t))
@@ -143,5 +145,5 @@ function rewrite(rw::CRewriter, t::CTerm)
         return builder(σ)::AbstractTerm
     end
 
-    return nothing
+    return t
 end
