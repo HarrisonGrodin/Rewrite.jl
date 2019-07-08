@@ -1,18 +1,3 @@
-import Base.match
-
-export vars, compile, match
-
-
-const Σ = Symbol
->ₑ(a::Σ, b::Σ) = a > b
-
-
-abstract type Theory end
-abstract type AbstractTerm end
-abstract type AbstractMatcher end
-abstract type AbstractSubproblem end
-
-
 """
     theory(T::Type{<:AbstractTerm}) -> Theory
 
@@ -27,7 +12,6 @@ theory(t::T) where {T<:AbstractTerm} = theory(T)
 Produce the set of variables which appear as subterms of `t`.
 """
 function vars end
-
 
 """
     priority(::Type{<:AbstractTerm}) -> Int
@@ -66,18 +50,15 @@ Compile `t` to a matcher.
 """
 compile(t) = compile(t, Set{Variable}())[1]
 
-
-const Substitution = Dict{Variable,AbstractTerm}
-struct Matches{S<:AbstractSubproblem}
-    p::Substitution
-    s::S
-end
-Base.IteratorSize(::Type{<:Matches}) = Base.SizeUnknown()
-
 """
     match(pattern::AbstractMatcher, term::AbstractTerm)
 
 Match `term` against `pattern`, producing an iterator containing all matches.
+
+!!! note
+
+    The iterator should only be nonempty when `pattern` and `term` are derived from the
+    same theory.
 """
 function match(p::AbstractMatcher, t::AbstractTerm)
     σ = Substitution()
@@ -87,7 +68,7 @@ function match(p::AbstractMatcher, t::AbstractTerm)
 end
 
 """
-    match!(σ, pattern::AbstractMatcher, term::AbstractTerm) -> AbstractSubproblem
+    match!(σ, pattern::AbstractMatcher, term::AbstractTerm) -> Union{AbstractSubproblem,Nothing}
 
 Match `term` against `pattern` given the partial substitution `σ`, mutating `σ` and
 producing a subproblem to solve or producing `nothing` if a match is impossible.
