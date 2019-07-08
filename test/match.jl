@@ -219,9 +219,9 @@ TESTS = [
 
 @testset "$set" for (set, tests) ∈ TESTS
     @testset "$pattern" for (pattern, cases) ∈ tests
-        m = Terms.compile(pattern)
+        m = compile(pattern)
         @testset "$term" for (term, ms) ∈ cases
-            matches = Terms.match(m, term)
+            matches = match(m, term)
             @test Set(matches) == Set(matches)  # immutability of iterator
             @test Set(matches) == Set(ms)
         end

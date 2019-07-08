@@ -1,3 +1,6 @@
+export compile
+
+
 """
     theory(T::Type{<:AbstractTerm}) -> Theory
 
@@ -51,26 +54,14 @@ Compile `t` to a matcher.
 compile(t) = compile(t, Set{Variable}())[1]
 
 """
-    match(pattern::AbstractMatcher, term::AbstractTerm)
-
-Match `term` against `pattern`, producing an iterator containing all matches.
-
-!!! note
-
-    The iterator should only be nonempty when `pattern` and `term` are derived from the
-    same theory.
-"""
-function match(p::AbstractMatcher, t::AbstractTerm)
-    σ = Substitution()
-    s = match!(σ, p, t)
-    s === nothing && return fail
-    Matches(σ, s)
-end
-
-"""
     match!(σ, pattern::AbstractMatcher, term::AbstractTerm) -> Union{AbstractSubproblem,Nothing}
 
 Match `term` against `pattern` given the partial substitution `σ`, mutating `σ` and
 producing a subproblem to solve or producing `nothing` if a match is impossible.
+
+!!! note
+
+    Unless `pattern` and `term` are derived from the same theory, `match!` should
+    necessarily produce `nothing`.
 """
 match!(::Any, ::AbstractMatcher, ::AbstractTerm) = nothing
