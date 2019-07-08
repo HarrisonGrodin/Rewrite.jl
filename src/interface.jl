@@ -2,7 +2,7 @@ export compile, replace, rewrite
 
 
 """
-    theory(T::Type{<:AbstractTerm}) -> Theory
+    theory(T::Type{<:AbstractTerm}) -> AbstractTheory
 
 Produce the theory which contains type `T`.
 """
@@ -74,7 +74,7 @@ Replace each variable subterm `x` of `pattern` with `σ[x]`.
 replace(pattern::AbstractTerm, σ::Substitution)
 
 """
-    rewriter(t::Theory) -> AbstractRewriter
+    rewriter(t::AbstractTheory) -> AbstractRewriter
 
 Produce a fresh rewriter for theory `t`.
 """

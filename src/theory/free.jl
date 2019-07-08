@@ -3,7 +3,7 @@ export FreeTerm
 using Combinatorics
 
 
-struct FreeTheory <: Theory end
+struct FreeTheory <: AbstractTheory end
 
 
 struct FreeTerm <: AbstractTerm

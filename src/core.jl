@@ -7,7 +7,7 @@ const Σ = Symbol
 >ₑ(a::Σ, b::Σ) = a > b
 
 
-abstract type Theory end
+abstract type AbstractTheory end
 abstract type AbstractTerm end
 abstract type AbstractMatcher end
 abstract type AbstractSubproblem end

@@ -1,7 +1,7 @@
 export CTerm
 
 
-struct CTheory <: Theory end
+struct CTheory <: AbstractTheory end
 
 
 struct CTerm <: AbstractTerm
