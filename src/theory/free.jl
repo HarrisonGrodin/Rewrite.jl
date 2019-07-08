@@ -162,3 +162,28 @@ Base.iterate(iter::Matches{FreeSubproblem}) = _aiterate(iter.p, iter.s.subproble
 Base.iterate(iter::Matches{FreeSubproblem}, st) = _aiterate1(iter.p, (iter.s.subproblems...,), st)
 
 replace(p::FreeTerm, σ) = FreeTerm(p.root, Union{Variable,AbstractTerm}[replace(arg, σ) for arg ∈ p.args])
+
+
+struct FreeRewriter <: AbstractRewriter
+    rules::Dict{Σ,Vector{Pair{FreeMatcher,Any}}}
+end
+
+rewriter(::FreeTheory) = FreeRewriter(Dict{Σ,Vector{Pair{FreeMatcher,Any}}}())
+function Base.push!(rw::FreeRewriter, (p, b)::Pair{FreeTerm})
+    haskey(rw.rules, p.root) || (rw.rules[p.root] = Pair{FreeMatcher,Any}[])
+    push!(rw.rules[p.root], compile(p) => b)
+    rw
+end
+
+function rewrite(rw::FreeRewriter, t::FreeTerm)
+    haskey(rw.rules, t.root) || return nothing
+
+    for (pattern, builder) ∈ rw.rules[t.root]
+        next = iterate(match(pattern, t))
+        next === nothing && continue
+        σ = next[1]
+        return builder(σ)::AbstractTerm
+    end
+
+    return nothing
+end

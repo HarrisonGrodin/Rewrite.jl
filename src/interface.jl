@@ -1,4 +1,4 @@
-export compile, replace
+export compile, replace, rewrite
 
 
 """
@@ -72,3 +72,17 @@ match!(::Any, ::AbstractMatcher, ::AbstractTerm) = nothing
 Replace each variable subterm `x` of `pattern` with `σ[x]`.
 """
 replace(pattern::AbstractTerm, σ::Substitution)
+
+"""
+    rewriter(t::Theory) -> AbstractRewriter
+
+Produce a fresh rewriter for theory `t`.
+"""
+function rewriter end
+
+"""
+    rewrite(rw::AbstractRewriter, t::AbstractTerm) -> Union{AbstractTerm,Nothing}
+
+Rewrite `t` using `rw`, producing `nothing` if the process fails.
+"""
+function rewrite end

@@ -120,3 +120,28 @@ end
 
 
 replace(p::CTerm, σ) = CTerm(p.root, replace(p.α, σ), replace(p.β, σ))
+
+
+struct CRewriter <: AbstractRewriter
+    rules::Dict{Σ,Vector{Pair{CMatcher,Any}}}
+end
+
+rewriter(::CTheory) = CRewriter(Dict{Σ,Vector{Pair{CMatcher,Any}}}())
+function Base.push!(rw::CRewriter, (p, b)::Pair{CTerm})
+    haskey(rw.rules, p.root) || (rw.rules[p.root] = Pair{CMatcher,Any}[])
+    push!(rw.rules[p.root], compile(p) => b)
+    rw
+end
+
+function rewrite(rw::CRewriter, t::CTerm)
+    haskey(rw.rules, t.root) || return nothing
+
+    for (pattern, builder) ∈ rw.rules[t.root]
+        next = iterate(match(pattern, t))
+        next === nothing && continue
+        σ = next[1]
+        return builder(σ)::AbstractTerm
+    end
+
+    return nothing
+end
