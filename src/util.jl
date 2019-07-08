@@ -1,19 +1,3 @@
-vars(x::Variable) = Set([x])
-compile(x::Variable, V) = (x, union!(Set([x]), V))
-@inline function match!(σ, x::Variable, t::AbstractTerm)
-    if haskey(σ, x)
-        σ[x] == t || return nothing
-    else
-        σ[x] = t
-    end
-    return EmptySubproblem()
-end
-
->ₜ(::Variable, ::AbstractTerm) = false
->ₜ(::AbstractTerm, ::Variable) = true
->ₜ(x::Variable, y::Variable) = objectid(x) > objectid(y)
-
-
 function compile_many(ps::Vector, V)
     matchers = similar(ps, Union{AbstractMatcher,Variable})
     for (i, p) ∈ enumerate(ps)
@@ -30,17 +14,6 @@ function compatible(p::Dict, q::Dict)
     end
     return true
 end
-
-
-struct Fail end
-Base.iterate(::Fail) = nothing
-Base.length(::Fail) = 0
-const fail = Fail()
-
-
-struct EmptySubproblem <: AbstractSubproblem end
-Base.iterate(m::Matches{EmptySubproblem}) = (m.p, nothing)
-Base.iterate(::Matches{EmptySubproblem}, ::Any) = nothing
 
 
 @inline _aiterate(p) = (p, ())
