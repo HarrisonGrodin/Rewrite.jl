@@ -16,4 +16,4 @@ abstract type AbstractRewriter end
 
 include("variable.jl")
 include("match.jl")
-include("rule.jl")
+include("rewrite.jl")
