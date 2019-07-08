@@ -160,3 +160,5 @@ end
 
 Base.iterate(iter::Matches{FreeSubproblem}) = _aiterate(iter.p, iter.s.subproblems...)
 Base.iterate(iter::Matches{FreeSubproblem}, st) = _aiterate1(iter.p, (iter.s.subproblems...,), st)
+
+Base.replace(p::FreeTerm, σ) = FreeTerm(p.root, Union{Variable,AbstractTerm}[replace(arg, σ) for arg ∈ p.args])

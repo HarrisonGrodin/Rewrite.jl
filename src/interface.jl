@@ -65,3 +65,10 @@ producing a subproblem to solve or producing `nothing` if a match is impossible.
     necessarily produce `nothing`.
 """
 match!(::Any, ::AbstractMatcher, ::AbstractTerm) = nothing
+
+"""
+    replace(pattern::AbstractTerm, σ::Substitution) -> AbstractTerm
+
+Replace each variable subterm `x` of `pattern` with `σ[x]`.
+"""
+Base.replace(pattern::AbstractTerm, σ::Substitution)
