@@ -122,4 +122,49 @@ end
         @test rewrite(rw, and(A, f(f(A)))) == A
         @test rewrite(rw, and(or(F, F), B)) == F
     end
+
+    @testset "natural arithmetic" begin
+        z = FreeTerm(:z, [])
+        s(n) = FreeTerm(:s, [n])
+        _nat(n) = n == 0 ? z : s(_nat(n - 1))
+
+        add(m, n) = FreeTerm(:add, [m, n])
+        mul(m, n) = FreeTerm(:mul, [m, n])
+
+        rw = Rewriter(
+            add(x, z)    => replace(x),
+            add(x, s(y)) => replace(s(add(x, y))),
+            mul(x, z)    => replace(z),
+            mul(x, s(y)) => replace(add(x, mul(x, y))),
+        )
+
+        @testset "$x * $y" for x ∈ 0:5, y ∈ 0:5
+            @test rewrite(rw, mul(_nat(x), _nat(y))) == _nat(x * y)
+        end
+    end
+
+    @testset "list reverse" begin
+        nil = FreeTerm(:nil, [])
+        cons(x, xs) = FreeTerm(:cons, [x, xs])
+        rev(l) = FreeTerm(:rev, [l])
+        rev_aux(l, acc) = FreeTerm(:rev_aux, [l, acc])
+
+        function _from(arr)
+            l = nil
+            for x ∈ reverse(arr)
+                l = cons(x, l)
+            end
+            return l
+        end
+
+        rw = Rewriter(
+            rev_aux(nil, x)        => replace(x),
+            rev_aux(cons(x, y), z) => replace(rev_aux(y, cons(x, z))),
+            rev(x)                 => replace(rev_aux(x, nil)),
+        )
+
+        arr = [FreeTerm(Symbol(c), []) for c ∈ 'a':'z']
+        @test rewrite(rw, rev(nil)) == nil
+        @test rewrite(rw, rev(_from(arr))) == _from(reverse(arr))
+    end
 end
