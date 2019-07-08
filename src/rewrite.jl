@@ -21,9 +21,10 @@ rewrite(rw::Rewriter) = Base.Fix1(rewrite, rw)
 function rewrite(rw::Rewriter, t)
     while true
         th = theory(t)
+        t = map(rewrite(rw), t)
         haskey(rw.rewriters, th) || return t
 
-        t′ = rewrite(rw.rewriters[th], map(rewrite(rw), t))
+        t′ = rewrite(rw.rewriters[th], t)
         t == t′ && return t
         t = t′
     end

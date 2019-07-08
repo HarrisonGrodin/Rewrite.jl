@@ -19,3 +19,7 @@ end
 @testset "match" begin
     include("match.jl")
 end
+
+@testset "rewrite" begin
+    include("rewrite.jl")
+end
