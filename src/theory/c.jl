@@ -136,7 +136,7 @@ function Base.push!(rw::CRewriter, (p, b)::Pair{CTerm})
 end
 
 function rewrite(rw::CRewriter, t::CTerm)
-    haskey(rw.rules, t.root) || return t
+    haskey(rw.rules, t.root) || return nothing
 
     for (pattern, builder) ∈ rw.rules[t.root]
         next = iterate(match(pattern, t))
@@ -145,5 +145,5 @@ function rewrite(rw::CRewriter, t::CTerm)
         return builder(σ)::AbstractTerm
     end
 
-    return t
+    return nothing
 end

@@ -25,7 +25,7 @@ function rewrite(rw::Rewriter, t)
         haskey(rw.rewriters, th) || return t
 
         t′ = rewrite(rw.rewriters[th], t)
-        t == t′ && return t
+        t′ === nothing && return t
         t = t′
     end
 end

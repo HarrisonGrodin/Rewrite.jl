@@ -178,7 +178,7 @@ function Base.push!(rw::FreeRewriter, (p, b)::Pair{FreeTerm})
 end
 
 function rewrite(rw::FreeRewriter, t::FreeTerm)
-    haskey(rw.rules, t.root) || return t
+    haskey(rw.rules, t.root) || return nothing
 
     for (pattern, builder) ∈ rw.rules[t.root]
         next = iterate(match(pattern, t))
@@ -187,5 +187,5 @@ function rewrite(rw::FreeRewriter, t::FreeTerm)
         return builder(σ)::AbstractTerm
     end
 
-    return t
+    return nothing
 end
