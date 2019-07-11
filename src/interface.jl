@@ -44,13 +44,6 @@ of variables which are guaranteed to be fixed during matching.
 function compile end
 
 """
-    compile(t::AbstractTerm) -> AbstractMatcher
-
-Compile `t` to a matcher.
-"""
-compile(t) = compile(t, Set{Variable}())[1]
-
-"""
     match!(σ, pattern::AbstractMatcher, term::AbstractTerm) -> Union{AbstractSubproblem,Nothing}
 
 Match `term` against `pattern` given the partial substitution `σ`, mutating `σ` and

@@ -1,3 +1,11 @@
+"""
+    compile(t::AbstractTerm) -> AbstractMatcher
+
+Compile `t` to a matcher.
+"""
+compile(t) = compile(t, Set{Variable}())[1]
+
+
 const Substitution = Dict{Variable,AbstractTerm}
 
 struct Matches{S<:AbstractSubproblem}
