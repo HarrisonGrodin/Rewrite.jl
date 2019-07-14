@@ -54,3 +54,23 @@ end
     (P′, state) = next
     return (P′, ((P, state), reststates...))
 end
+
+
+struct LazyMap{T,F}
+    f::F
+    iter::T
+end
+(Base.IteratorSize(::Type{<:LazyMap{T}}) where T) = Base.IteratorSize(T)
+Base.length(iter::LazyMap) = length(iter.iter)
+function Base.iterate(iter::LazyMap)
+    next = iterate(iter.iter)
+    next === nothing && return nothing
+    (result, state) = next
+    return (iter.f(result), state)
+end
+function Base.iterate(iter::LazyMap, state)
+    next = iterate(iter.iter, state)
+    next === nothing && return nothing
+    (result, state) = next
+    return (iter.f(result), state)
+end

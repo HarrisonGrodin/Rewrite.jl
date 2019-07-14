@@ -1,4 +1,4 @@
-export CTerm
+export CTheory
 
 
 struct CTheory <: AbstractTheory end

@@ -46,14 +46,6 @@ end
     end
 end
 
-@testset "free, custom" begin
-    rw = Rewriter(
-        f(x) => (σ -> g(σ[x], σ[x])),
-    )
-
-    @test rewrite(rw, f(a())) == g(a(), a())
-end
-
 @testset "commutative, simple" begin
     lhs = p(x, x)
     rhs = x
@@ -103,68 +95,81 @@ end
 
 @testset "sample cases" begin
     @testset "boolean logic" begin
-        F, T = a(), b()
-        and, or = p, q
-        rw = Rewriter(
-            and(x, F) => replace(F),
-            and(x, T) => replace(x),
-            and(x, x)   => replace(x),
-            or(x, F) => replace(x),
-            or(x, T) => replace(T),
-            or(x, x)   => replace(x),
-            f(and(x, y)) => replace(or(f(x), f(y))),
-            f(or(x, y)) => replace(and(f(x), f(y))),
-            f(f(x)) => replace(x),
-        )
+        @theory Bool begin
+            F   => FreeTheory()
+            T   => FreeTheory()
+            and => CTheory()
+            or  => CTheory()
+            not => FreeTheory()
+        end
 
-        A, B, C = FreeTerm.((:A, :B, :C), Ref([]))
+        @rules Prop Bool [x, y] begin
+            and(x, F) := F
+            and(x, T) := x
+            and(x, x) := x
 
-        @test rewrite(rw, and(A, f(f(A)))) == A
-        @test rewrite(rw, and(or(F, F), B)) == F
+            or(x, F) := x
+            or(x, T) := T
+            or(x, x) := x
+
+            not(and(x, y)) := or(not(x), not(y))
+            not(or(x, y))  := and(not(x), not(y))
+            not(not(x)) := x
+        end
+
+        @test rewrite(Prop, @term(Bool, and(A, not(not(A))))) == @term(Bool, A)
+        @test rewrite(Prop, @term(Bool, and(or(F, F), B))) == @term(Bool, F)
     end
 
     @testset "natural arithmetic" begin
-        z = FreeTerm(:z, [])
-        s(n) = FreeTerm(:s, [n])
-        _nat(n) = n == 0 ? z : s(_nat(n - 1))
+        @theory Nat begin
+            z => FreeTheory()
+            s => FreeTheory()
+            add => FreeTheory()
+            mul => FreeTheory()
+        end
 
-        add(m, n) = FreeTerm(:add, [m, n])
-        mul(m, n) = FreeTerm(:mul, [m, n])
+        @rules Arithmetic Nat [x, y] begin
+            add(x, z)    := x
+            add(x, s(y)) := s(add(x, y))
+            mul(x, z)    := z
+            mul(x, s(y)) := add(x, mul(x, y))
+        end
 
-        rw = Rewriter(
-            add(x, z)    => replace(x),
-            add(x, s(y)) => replace(s(add(x, y))),
-            mul(x, z)    => replace(z),
-            mul(x, s(y)) => replace(add(x, mul(x, y))),
-        )
+        _nat(n) = n == 0 ? @term(Nat, z) : @term(Nat, s($(_nat(n - 1))))
 
         @testset "$x * $y" for x ∈ 0:5, y ∈ 0:5
-            @test rewrite(rw, mul(_nat(x), _nat(y))) == _nat(x * y)
+            nx, ny = _nat(x), _nat(y)
+            @test rewrite(Arithmetic, @term(Nat, mul($nx, $ny))) == _nat(x * y)
         end
     end
 
     @testset "list reverse" begin
-        nil = FreeTerm(:nil, [])
-        cons(x, xs) = FreeTerm(:cons, [x, xs])
-        rev(l) = FreeTerm(:rev, [l])
-        rev_aux(l, acc) = FreeTerm(:rev_aux, [l, acc])
+        @theory List begin
+            nil  => FreeTheory()
+            cons => FreeTheory()
+            rev     => FreeTheory()
+            rev_aux => FreeTheory()
+        end
+
+        @rules Reverse List [x, y, z] begin
+            rev_aux(nil, x)        := x
+            rev_aux(cons(x, y), z) := rev_aux(y, cons(x, z))
+            rev(x)                 := rev_aux(x, nil)
+        end
 
         function _from(arr)
-            l = nil
+            l = @term(List, nil)
             for x ∈ reverse(arr)
-                l = cons(x, l)
+                l = @term(List, cons($x, $l))
             end
             return l
         end
 
-        rw = Rewriter(
-            rev_aux(nil, x)        => replace(x),
-            rev_aux(cons(x, y), z) => replace(rev_aux(y, cons(x, z))),
-            rev(x)                 => replace(rev_aux(x, nil)),
-        )
-
-        arr = [FreeTerm(Symbol(c), []) for c ∈ 'a':'z']
-        @test rewrite(rw, rev(nil)) == nil
-        @test rewrite(rw, rev(_from(arr))) == _from(reverse(arr))
+        @testset "reverse length $n" for n ∈ 0:10
+            local list
+            arr = [@term(List, $(Symbol(i))) for i ∈ 1:n]
+            @test rewrite(Reverse, @term(List, rev($(_from(arr))))) == _from(reverse(arr))
+        end
     end
 end

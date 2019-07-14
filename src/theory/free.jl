@@ -1,4 +1,5 @@
-export FreeTerm
+export FreeTheory
+
 
 using Combinatorics
 
