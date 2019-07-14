@@ -3,6 +3,8 @@ export Variable
 
 mutable struct Variable end
 
+Base.show(io::IO, x::Variable) = print(io, "Variable(#=", objectid(x), "=#)")
+
 
 vars(x::Variable) = Set([x])
 compile(x::Variable, V) = (x, push!(copy(V), x))
