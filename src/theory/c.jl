@@ -11,6 +11,12 @@ struct CTerm <: AbstractTerm
     CTerm(root, s, t) = s >ₜ t ? new(root, t, s) : new(root, s, t)
 end
 
+function term(::CTheory, root, args)
+    length(args) == 2 || throw(ArgumentError("invalid commutative term: expected 2 arguments, got $(length(args))"))
+    CTerm(root, args[1], args[2])
+end
+Base.convert(::Type{Expr}, t::CTerm) = Expr(:call, t.root, convert(Expr, t.α), convert(Expr, t.β))
+
 theory(::Type{CTerm}) = CTheory()
 priority(::Type{CTerm}) = 20
 

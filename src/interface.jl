@@ -1,4 +1,12 @@
 """
+    term(t::AbstractTheory, root::Σ, args::Vector{AbstractTerm}) -> AbstractTerm
+
+Produce a term in theory `t` with root `root` and arguments `args`. If an unexpected input
+is provided, raise an exception.
+"""
+function term end
+
+"""
     theory(T::Type{<:AbstractTerm}) -> AbstractTheory
 
 Produce the theory which contains type `T`.

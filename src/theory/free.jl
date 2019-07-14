@@ -12,6 +12,9 @@ struct FreeTerm <: AbstractTerm
 end
 FreeTerm(root) = FreeTerm(root, Union{Variable,AbstractTerm}[])
 
+term(::FreeTheory, root, args) = FreeTerm(root, args)
+Base.convert(::Type{Expr}, t::FreeTerm) = Expr(:call, t.root, convert.(Expr, t.args)...)
+
 theory(::Type{FreeTerm}) = FreeTheory()
 priority(::Type{FreeTerm}) = 1000
 
