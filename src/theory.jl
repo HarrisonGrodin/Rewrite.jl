@@ -113,4 +113,5 @@ function match(s::Term, t::Term)
 end
 
 replace(t::Term) = Base.Fix1(replace, t.t)
+Base.push!(rw::Rewriter, (p, b)::Pair{Term}) = push!(rw, p.t => b)
 rewrite(rw, t::Term) = Term(t.th, rewrite(rw, t.t))
