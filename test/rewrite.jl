@@ -117,8 +117,8 @@ end
             not(not(x)) := x
         end
 
-        @test rewrite(Prop, @term(Bool, and(A, not(not(A))))) == @term(Bool, A)
-        @test rewrite(Prop, @term(Bool, and(or(F, F), B))) == @term(Bool, F)
+        @test @rewrite(Prop, and(A, not(not(A)))) == @term(Bool, A)
+        @test @rewrite(Prop, and(or(F, F), B)) == @term(Bool, F)
     end
 
     @testset "natural arithmetic" begin
@@ -140,7 +140,7 @@ end
 
         @testset "$x * $y" for x ∈ 0:5, y ∈ 0:5
             nx, ny = _nat(x), _nat(y)
-            @test rewrite(Arithmetic, @term(Nat, mul($nx, $ny))) == _nat(x * y)
+            @test @rewrite(Arithmetic, mul($nx, $ny)) == _nat(x * y)
         end
     end
 
@@ -169,7 +169,7 @@ end
         @testset "reverse length $n" for n ∈ 0:10
             local list
             arr = [@term(List, $(Symbol(i))) for i ∈ 1:n]
-            @test rewrite(Reverse, @term(List, rev($(_from(arr))))) == _from(reverse(arr))
+            @test @rewrite(Reverse, rev($(_from(arr)))) == _from(reverse(arr))
         end
     end
 end
