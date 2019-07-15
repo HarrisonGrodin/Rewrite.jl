@@ -144,6 +144,30 @@ end
         end
     end
 
+    @testset "commutative addition" begin
+        @theory Nat begin
+            z => FreeTheory()
+            s => FreeTheory()
+            (+) => CTheory()
+        end
+
+        @rules Addition Nat [x, y] begin
+            x + z    := x
+            s(x) + y := s(x + y)
+        end
+
+        _nat(n) = n == 0 ? @term(Nat, z) : @term(Nat, s($(_nat(n - 1))))
+
+        @test @term(Nat, a + b) == @term(Nat, b + a)
+        @test @rewrite(Addition, a + s(b)) == @term(Nat, s(a + b))
+        @test @rewrite(Addition, s(a) + b) == @term(Nat, s(a + b))
+        @test @rewrite(Addition, s(a) + s(b)) == @term(Nat, s(s(a + b)))
+        @testset "$x + $y" for x ∈ 0:5, y ∈ 0:5
+            nx, ny = _nat(x), _nat(y)
+            @test @rewrite(Addition, $nx + $ny) == _nat(x + y)
+        end
+    end
+
     @testset "list reverse" begin
         @theory List begin
             nil  => FreeTheory()
