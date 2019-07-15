@@ -119,8 +119,6 @@ macro rules(name, th, varnames, body)
 end
 
 
-theory(t::Term) = theory(t.t)
-
 _wrap_theory(th) = Base.Fix1(_wrap_theory, th)
 _wrap_theory(th, d) = Dict(k => th(v) for (k, v) ∈ d)
 function match(s::Term, t::Term)

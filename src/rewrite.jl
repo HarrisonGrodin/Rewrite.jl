@@ -5,7 +5,6 @@ struct Rewriter <: AbstractRewriter
     rewriters::Dict{AbstractTheory,AbstractRewriter}
     Rewriter() = new(Dict{AbstractTheory,AbstractRewriter}())
 end
-Rewriter(rs...) = push!(Rewriter(), rs...)
 
 function Base.push!(rw::Rewriter, (p, b)::Pair{<:AbstractTerm})
     th = theory(p)
