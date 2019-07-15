@@ -1,4 +1,5 @@
-export Theory, @term, @theory, @rules
+export @theory, @term, @rules
+export Theory, Term, Rules, rewrite
 
 
 struct Theory
@@ -65,6 +66,21 @@ macro theory(name, body)
     :($(esc(name)) = Theory($(Meta.quot(name)), Dict($(body.args...))))
 end
 
+
+struct Rules
+    name::Symbol
+    th::Theory
+    rw::Rewriter
+    Rules(name, th) = new(name, th, Rewriter())
+end
+Rules(name, th, rules) = push!(Rules(name, th), rules...)
+Base.show(io::IO, rs::Rules) = print(io, rs.name)
+function Base.push!(rs::Rules, (p, b)::Pair{Term})
+    rs.th == p.th || throw(ArgumentError("rules and rule are from different theories: $(rs.th) and $(p.th)"))
+    push!(rs.rw, p.t => b)
+    rs
+end
+
 function _rules_replace!(ex, vars)
     isa(ex, Symbol) && return get(vars, ex, ex)
 
@@ -98,7 +114,7 @@ macro rules(name, th, varnames, body)
         args[i] = :($lhs => replace($rhs))
     end
 
-    let_expr = Expr(:let, var_exprs, :(Rewriter($(args...))))
+    let_expr = Expr(:let, var_exprs, :(Rules($(Meta.quot(name)), $(esc(th)), [$(args...)])))
     return :($(esc(name)) = $let_expr)
 end
 
@@ -108,10 +124,12 @@ theory(t::Term) = theory(t.t)
 _wrap_theory(th) = Base.Fix1(_wrap_theory, th)
 _wrap_theory(th, d) = Dict(k => th(v) for (k, v) ∈ d)
 function match(s::Term, t::Term)
-    s.th == t.th || throw(ArgumentError("cannot matchterms from different theories: $(s.th) and $(t.th)"))
+    s.th == t.th || throw(ArgumentError("pattern and subject are from different theories: $(s.th) and $(t.th)"))
     LazyMap(_wrap_theory(s.th), match(s.t, t.t))
 end
 
 replace(t::Term) = Base.Fix1(replace, t.t)
-Base.push!(rw::Rewriter, (p, b)::Pair{Term}) = push!(rw, p.t => b)
-rewrite(rw, t::Term) = Term(t.th, rewrite(rw, t.t))
+function rewrite(rs::Rules, t::Term)
+    rs.th == t.th || throw(ArgumentError("rules and term are from different theories: $(rs.th) and $(t.th)"))
+    Term(t.th, rewrite(rs.rw, t.t))
+end

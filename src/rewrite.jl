@@ -1,6 +1,3 @@
-export Rewriter, rewrite
-
-
 replace(t::Union{Variable,AbstractTerm}) = Base.Fix1(replace, t)
 
 

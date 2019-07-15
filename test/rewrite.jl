@@ -1,11 +1,11 @@
 @testset "empty" begin
-    rw = Rewriter()
+    rw = Rules(:Demo, Example)
     @test rewrite(rw, a()) == a()
     @test rewrite(rw, f(a())) == f(a())
 end
 
 @testset "free, simple" begin
-    rw = Rewriter(f(x) => replace(g(x)))
+    rw = Rules(:Demo, Example, [f(x) => replace(g(x))])
     @test rewrite(rw, f(a())) == g(a())
     @test rewrite(rw, h(f(a()))) == h(g(a()))
     @test rewrite(rw, g(a())) == g(a())
@@ -14,10 +14,10 @@ end
 
 @testset "free, complex" begin
     @testset "orthogonal" begin
-        rw = Rewriter(
+        rw = Rules(:Demo, Example, [
             f(x)       => replace(g(x)),
             h(x, x, y) => replace(p(x, y)),
-        )
+        ])
 
         @test rewrite(rw, f(a())) == g(a())
         @test rewrite(rw, h(a(), a(), b())) == p(a(), b())
@@ -25,10 +25,10 @@ end
     end
 
     @testset "overlapping" begin
-        rw = Rewriter(
+        rw = Rules(:Demo, Example, [
             f(x)    => replace(g(x)),
             f(g(x)) => replace(h(x)),
-        )
+        ])
 
         @test rewrite(rw, f(a())) == g(a())
         @test rewrite(rw, f(g(a()))) ∈ [g(g(a())), h(a())]
@@ -36,10 +36,10 @@ end
     end
 
     @testset "identical" begin
-        rw = Rewriter(
+        rw = Rules(:Demo, Example, [
             f(x) => replace(g(x)),
             f(x) => replace(h(x)),
-        )
+        ])
 
         @test rewrite(rw, f(a())) ∈ [g(a()), h(a())]
         @test rewrite(rw, f(f(a()))) ∈ [g(g(a())), g(h(a())), h(g(a())), h(h(a()))]
@@ -49,32 +49,32 @@ end
 @testset "commutative, simple" begin
     lhs = p(x, x)
     rhs = x
-    rw = Rewriter(lhs => replace(rhs))
+    rw = Rules(:Demo, Example, [lhs => replace(rhs)])
     @test rewrite(rw, p(a(), a())) == a()
     @test rewrite(rw, p(b(), b())) == b()
     @test rewrite(rw, p(a(), b())) == p(a(), b())
 
-    rw = Rewriter()
+    rw = Rules(:Demo, Example)
     push!(rw, lhs => replace(rhs))
     @test rewrite(rw, p(a(), a())) == a()
 end
 
 @testset "commutative, complex" begin
     @testset "orthogonal" begin
-        rw = Rewriter(
+        rw = Rules(:Demo, Example, [
             p(a(), x)   => replace(x),
             p(b(), b()) => replace(c()),
-        )
+        ])
 
         @test rewrite(rw, p(a(), b())) == b()
         @test rewrite(rw, f(p(a(), b()))) == f(b())
     end
 
     @testset "overlapping" begin
-        rw = Rewriter(
+        rw = Rules(:Demo, Example, [
             p(a(), x) => replace(a()),
             p(x, b()) => replace(b()),
-        )
+        ])
 
         @test rewrite(rw, p(a(), c())) == a()
         @test rewrite(rw, p(b(), c())) == b()
@@ -82,11 +82,11 @@ end
     end
 
     @testset "identical" begin
-        rw = Rewriter(
+        rw = Rules(:Demo, Example, [
             p(x, y) => replace(q(x, x)),
             q(x, x) => replace(a()),
             q(x, x) => replace(b()),
-        )
+        ])
 
         @test rewrite(rw, p(c(), c())) ∈ [a(), b()]
     end
