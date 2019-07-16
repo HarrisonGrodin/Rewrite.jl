@@ -1,9 +1,10 @@
-export FreeTerm
+export FreeTheory
+
 
 using Combinatorics
 
 
-struct FreeTheory <: Theory end
+struct FreeTheory <: AbstractTheory end
 
 
 struct FreeTerm <: AbstractTerm
@@ -11,6 +12,9 @@ struct FreeTerm <: AbstractTerm
     args::Vector{Union{Variable,AbstractTerm}}
 end
 FreeTerm(root) = FreeTerm(root, Union{Variable,AbstractTerm}[])
+
+term(::FreeTheory, root, args) = FreeTerm(root, args)
+Base.convert(::Type{Expr}, t::FreeTerm) = Expr(:call, t.root, convert.(Expr, t.args)...)
 
 theory(::Type{FreeTerm}) = FreeTheory()
 priority(::Type{FreeTerm}) = 1000
@@ -42,6 +46,8 @@ function Base.hash(t::FreeTerm, h::UInt)
     init = hash(t.root, hash(FreeTerm, h))
     foldr(hash, t.args; init=init)
 end
+
+Base.map(f, t::FreeTerm) = FreeTerm(t.root, map(f, t.args))
 
 
 @enum FreeKind VAR NODE ALIEN
@@ -160,3 +166,30 @@ end
 
 Base.iterate(iter::Matches{FreeSubproblem}) = _aiterate(iter.p, iter.s.subproblems...)
 Base.iterate(iter::Matches{FreeSubproblem}, st) = _aiterate1(iter.p, (iter.s.subproblems...,), st)
+
+replace(p::FreeTerm, σ) = FreeTerm(p.root, Union{Variable,AbstractTerm}[replace(arg, σ) for arg ∈ p.args])
+
+
+struct FreeRewriter <: AbstractRewriter
+    rules::Dict{Σ,Vector{Pair{FreeMatcher,Any}}}
+end
+
+rewriter(::FreeTheory) = FreeRewriter(Dict{Σ,Vector{Pair{FreeMatcher,Any}}}())
+function Base.push!(rw::FreeRewriter, (p, b)::Pair{FreeTerm})
+    haskey(rw.rules, p.root) || (rw.rules[p.root] = Pair{FreeMatcher,Any}[])
+    push!(rw.rules[p.root], compile(p) => b)
+    rw
+end
+
+function rewrite(rw::FreeRewriter, t::FreeTerm)
+    haskey(rw.rules, t.root) || return nothing
+
+    for (pattern, builder) ∈ rw.rules[t.root]
+        next = iterate(match(pattern, t))
+        next === nothing && continue
+        σ = next[1]
+        return builder(σ)::AbstractTerm
+    end
+
+    return nothing
+end

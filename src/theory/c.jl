@@ -1,7 +1,7 @@
-export CTerm
+export CTheory
 
 
-struct CTheory <: Theory end
+struct CTheory <: AbstractTheory end
 
 
 struct CTerm <: AbstractTerm
@@ -10,6 +10,12 @@ struct CTerm <: AbstractTerm
     β::Union{Variable,AbstractTerm}
     CTerm(root, s, t) = s >ₜ t ? new(root, t, s) : new(root, s, t)
 end
+
+function term(::CTheory, root, args)
+    length(args) == 2 || throw(ArgumentError("invalid commutative term: expected 2 arguments, got $(length(args))"))
+    CTerm(root, args[1], args[2])
+end
+Base.convert(::Type{Expr}, t::CTerm) = Expr(:call, t.root, convert(Expr, t.α), convert(Expr, t.β))
 
 theory(::Type{CTerm}) = CTheory()
 priority(::Type{CTerm}) = 20
@@ -24,6 +30,8 @@ function (a::CTerm >ₜ b::CTerm)
 end
 
 Base.hash(t::CTerm, h::UInt) = hash(t.β, hash(t.α, hash(t.root, hash(CTerm, h))))
+
+Base.map(f, t::CTerm) = CTerm(t.root, f(t.α), f(t.β))
 
 
 struct CMatcher <: AbstractMatcher
@@ -116,4 +124,32 @@ function Base.iterate(iter::Matches{CSubproblem}, (i, P₁, states))
 
     (P, states) = next
     return (P, (i, P₁, states))
+end
+
+
+replace(p::CTerm, σ) = CTerm(p.root, replace(p.α, σ), replace(p.β, σ))
+
+
+struct CRewriter <: AbstractRewriter
+    rules::Dict{Σ,Vector{Pair{CMatcher,Any}}}
+end
+
+rewriter(::CTheory) = CRewriter(Dict{Σ,Vector{Pair{CMatcher,Any}}}())
+function Base.push!(rw::CRewriter, (p, b)::Pair{CTerm})
+    haskey(rw.rules, p.root) || (rw.rules[p.root] = Pair{CMatcher,Any}[])
+    push!(rw.rules[p.root], compile(p) => b)
+    rw
+end
+
+function rewrite(rw::CRewriter, t::CTerm)
+    haskey(rw.rules, t.root) || return nothing
+
+    for (pattern, builder) ∈ rw.rules[t.root]
+        next = iterate(match(pattern, t))
+        next === nothing && continue
+        σ = next[1]
+        return builder(σ)::AbstractTerm
+    end
+
+    return nothing
 end
