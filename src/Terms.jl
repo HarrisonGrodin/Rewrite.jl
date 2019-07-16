@@ -1,6 +1,7 @@
 module Terms
 
 include("core.jl")
+include("theory.jl")
 include("interface.jl")
 
 include("theory/free.jl")

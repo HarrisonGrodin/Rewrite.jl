@@ -5,7 +5,7 @@ end
 
 @testset "free" begin
     @test a() == a()
-    @test FreeTerm(:a, []) == FreeTerm(:a)
+    @test @term(Example, a()) == @term(Example, a)
     @test a() ≠ b()
     @test f(a(), a()) == f(a(), a())
     @test f(a(), b()) == f(a(), b())

@@ -1,8 +1,13 @@
-export compile
+"""
+    term(t::AbstractTheory, root::Σ, args::Vector{AbstractTerm}) -> AbstractTerm
 
+Produce a term in theory `t` with root `root` and arguments `args`. If an unexpected input
+is provided, raise an exception.
+"""
+function term end
 
 """
-    theory(T::Type{<:AbstractTerm}) -> Theory
+    theory(T::Type{<:AbstractTerm}) -> AbstractTheory
 
 Produce the theory which contains type `T`.
 """
@@ -47,13 +52,6 @@ of variables which are guaranteed to be fixed during matching.
 function compile end
 
 """
-    compile(t::AbstractTerm) -> AbstractMatcher
-
-Compile `t` to a matcher.
-"""
-compile(t) = compile(t, Set{Variable}())[1]
-
-"""
     match!(σ, pattern::AbstractMatcher, term::AbstractTerm) -> Union{AbstractSubproblem,Nothing}
 
 Match `term` against `pattern` given the partial substitution `σ`, mutating `σ` and
@@ -65,3 +63,24 @@ producing a subproblem to solve or producing `nothing` if a match is impossible.
     necessarily produce `nothing`.
 """
 match!(::Any, ::AbstractMatcher, ::AbstractTerm) = nothing
+
+"""
+    replace(pattern::AbstractTerm, σ::Substitution) -> AbstractTerm
+
+Replace each variable subterm `x` of `pattern` with `σ[x]`.
+"""
+replace(pattern::AbstractTerm, σ::Substitution)
+
+"""
+    rewriter(t::AbstractTheory) -> AbstractRewriter
+
+Produce a fresh rewriter for theory `t`.
+"""
+function rewriter end
+
+"""
+    rewrite(rw::AbstractRewriter, t::AbstractTerm) -> AbstractTerm
+
+Rewrite `t` using `rw`, producing `nothing` if the process fails.
+"""
+function rewrite end
