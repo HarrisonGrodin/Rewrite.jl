@@ -78,3 +78,39 @@ function Base.iterate(iter::LazyMap, state)
     (result, state) = next
     return (iter.f(result), state)
 end
+
+struct LazyFlatten{T}
+    iter::T
+end
+(Base.IteratorSize(::Type{<:LazyFlatten{T}}) where T) = Base.IteratorSize(T)
+Base.length(iter::LazyFlatten) = length(iter.iter)
+function _iterate_lazyflatten(next)
+    while next !== nothing
+        (inner, state) = next
+
+        inext = iterate(inner)
+        if inext === nothing
+            (inner, state) = iterate(iter.iter, state)
+            continue
+        end
+
+        (result, istate) = inext
+        return result, (state, (inner, istate))
+    end
+
+    return nothing
+end
+function Base.iterate(iter::LazyFlatten)
+    next = iterate(iter.iter)
+    return _iterate_lazyflatten(next)
+end
+function Base.iterate(iter::LazyFlatten, (state, (inner, istate)))
+    inext = iterate(inner, istate)
+    if inext !== nothing
+        (result, istate) = inext
+        return result, (state, (inner, istate))
+    end
+
+    next = iterate(iter.iter, state)
+    return _iterate_lazyflatten(next)
+end
