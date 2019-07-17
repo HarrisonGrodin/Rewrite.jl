@@ -1,6 +1,3 @@
-replace(t::Union{Variable,AbstractTerm}) = Base.Fix1(replace, t)
-
-
 struct Rewriter <: AbstractRewriter
     rewriters::Dict{AbstractTheory,AbstractRewriter}
     Rewriter() = new(Dict{AbstractTheory,AbstractRewriter}())

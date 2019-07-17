@@ -127,6 +127,7 @@ function match(s::Term, t::Term)
 end
 
 replace(t::Term) = Base.Fix1(replace, t.t)
+replace(x::Variable) = Base.Fix1(replace, x)
 function rewrite(rs::Rules, t::Term)
     rs.th == t.th || throw(ArgumentError("rules and term are from different theories: $(rs.th) and $(t.th)"))
     Term(t.th, rewrite(rs.rw, t.t))

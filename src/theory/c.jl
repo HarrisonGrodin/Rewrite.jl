@@ -127,9 +127,6 @@ function Base.iterate(iter::Matches{CSubproblem}, (i, P₁, states))
 end
 
 
-replace(p::CTerm, σ) = CTerm(p.root, replace(p.α, σ), replace(p.β, σ))
-
-
 struct CRewriter <: AbstractRewriter
     rules::Dict{Σ,Vector{Pair{CMatcher,Any}}}
 end

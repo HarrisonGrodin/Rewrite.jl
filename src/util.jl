@@ -1,3 +1,7 @@
+substitute(σ) = Base.Fix2(replace, σ)
+replace(t::AbstractTerm, σ) = map(substitute(σ), t)
+
+
 function compile_many(ps::Vector, V)
     matchers = similar(ps, Union{AbstractMatcher,Variable})
     for (i, p) ∈ enumerate(ps)

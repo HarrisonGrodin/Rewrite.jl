@@ -65,11 +65,11 @@ producing a subproblem to solve or producing `nothing` if a match is impossible.
 match!(::Any, ::AbstractMatcher, ::AbstractTerm) = nothing
 
 """
-    replace(pattern::AbstractTerm, σ::Substitution) -> AbstractTerm
+    map(f, t::AbstractTerm) -> AbstractTerm
 
-Replace each variable subterm `x` of `pattern` with `σ[x]`.
+Call `f` on each subterm of `t`.
 """
-replace(pattern::AbstractTerm, σ::Substitution)
+Base.map(f, t::AbstractTerm)
 
 """
     rewriter(t::AbstractTheory) -> AbstractRewriter
