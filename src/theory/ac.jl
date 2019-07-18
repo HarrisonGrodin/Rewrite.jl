@@ -73,16 +73,30 @@ end
 struct ACMatcherSC <: AbstractMatcher
     root::Σ
     ground_subterms::Dict{AbstractTerm,UInt}
+    alien_subterms::Vector{AbstractMatcher}
     linear_variables::Vector{Variable}
 end
 
 function compile(t::ACTerm, V)
     ground_subterms = Dict{AbstractTerm,UInt}()
+    alien_subterms = AbstractMatcher[]
     linear_variables = Variable[]
+
+    V′ = copy(V)
 
     for (s, k) ∈ t.args
         if isempty(vars(s))
             ground_subterms[s] = k
+        elseif isa(s, AbstractTerm) && k == 1
+            svars = setdiff(vars(s), V)
+            for other ∈ keys(t.args)
+                other == s && continue
+                isempty(svars ∩ vars(other)) || error("AC pattern not yet supported: $t")
+            end
+
+            s_matcher, sV = compile(s, V)
+            push!(alien_subterms, s_matcher)
+            union!(V′, sV)
         elseif isa(s, Variable) && k == 1 && s ∉ V
             push!(linear_variables, s)
         else
@@ -91,9 +105,11 @@ function compile(t::ACTerm, V)
     end
 
     isempty(linear_variables) && error("AC pattern not yet supported: $t")
+    length(alien_subterms) ≤ 1 || error("AC pattern not yet supported: $t")
 
-    V′ = union(V, linear_variables)
-    return ACMatcherSC(t.root, ground_subterms, linear_variables), V′
+    union!(V, linear_variables)
+
+    return ACMatcherSC(t.root, ground_subterms, alien_subterms, linear_variables), V′
 end
 
 
@@ -110,11 +126,11 @@ function _multiplicities_to_vector(dict)
 
     args
 end
-_build_ac_term((root, linear_variables), partition) = Dict(
+_build_ac((root, linear_variables), partition) = Dict(
     x => term(ACTheory(), root, args)
     for (x, args) ∈ zip(linear_variables, partition)
 )
-_build_ac_term(A::ACMatcherSC) = Base.Fix1(_build_ac_term, (A.root, A.linear_variables))
+_build_ac(A::ACMatcherSC) = Base.Fix1(_build_ac, (A.root, A.linear_variables))
 function match!(σ, A::ACMatcherSC, t::ACTerm)
     t.root == A.root || return nothing
     args = copy(t.args)
@@ -126,11 +142,32 @@ function match!(σ, A::ACMatcherSC, t::ACTerm)
     end
 
     nargs = sum(values(args))
-    nargs ≥ length(A.linear_variables) || return nothing
+    naliens = length(A.alien_subterms)
+    nargs ≥ length(A.linear_variables) + naliens || return nothing
 
-    parts = partitions(_multiplicities_to_vector(args), length(A.linear_variables))
-    iter = LazyMap(_build_ac_term(A), LazyFlatten(LazyMap(permutations, parts)))
-    return ACSubproblemSC(iter)
+    if naliens == 0
+        parts = partitions(_multiplicities_to_vector(args), length(A.linear_variables))
+        iter = LazyMap(_build_ac(A), LazyFlatten(LazyMap(permutations, parts)))
+        return ACSubproblemSC(iter)
+    end
+
+    @assert naliens == 1
+    alien = A.alien_subterms[1]
+    iters = []
+    for (s, q) ∈ args
+        σ′ = copy(σ)
+        subproblem = match!(σ′, alien, s)
+        subproblem === nothing && continue
+
+        args′ = Dict(s′ => q′ for (s′, q′) ∈ args if s′ ≠ s)
+        q == 1 || (args′[s] = q - 1)
+
+        f = part -> merge(_build_ac(A)(part), σ′)
+        parts = partitions(_multiplicities_to_vector(args′), length(A.linear_variables))
+        iter = LazyMap(f, LazyFlatten(LazyMap(permutations, parts)))
+        push!(iters, iter)
+    end
+    return ACSubproblemSC(LazyFlatten(iters))
 end
 
 
