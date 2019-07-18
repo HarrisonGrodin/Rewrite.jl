@@ -57,8 +57,13 @@ function Base.map(f, p::ACTerm)
 
     for (t, k) ∈ p.args
         t′ = f(t)
-        old = get(dict, t′, 0)
-        dict[t′] = old + k
+        if isa(t′, ACTerm) && t′.root == p.root
+            for (u, i) ∈ t′.args
+                dict[u] = get(dict, u, 0) + i*k
+            end
+        else
+            dict[t′] = get(dict, t′, 0) + k
+        end
     end
 
     return ACTerm(p.root, dict)
