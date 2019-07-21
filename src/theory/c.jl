@@ -18,7 +18,7 @@ end
 Base.convert(::Type{Expr}, t::CTerm) = Expr(:call, t.root, convert(Expr, t.α), convert(Expr, t.β))
 
 theory(::Type{CTerm}) = CTheory()
-priority(::Type{CTerm}) = 20
+priority(::Type{CTerm}) = 50
 
 vars(t::CTerm) = vars(t.α) ∪ vars(t.β)
 

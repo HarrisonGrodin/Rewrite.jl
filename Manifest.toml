@@ -9,6 +9,12 @@ git-tree-sha1 = "50b3ae4d643dc27eaff69fb6be06ee094d5500c9"
 uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 version = "0.7.0"
 
+[[DataStructures]]
+deps = ["InteractiveUtils", "OrderedCollections"]
+git-tree-sha1 = "0809951a1774dc724da22d26e4289bbaab77809a"
+uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+version = "0.17.0"
+
 [[Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
@@ -30,6 +36,12 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 [[Markdown]]
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
+
+[[OrderedCollections]]
+deps = ["Random", "Serialization", "Test"]
+git-tree-sha1 = "c4c13474d23c60d20a67b217f1d7f22a40edf8f1"
+uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
+version = "1.1.0"
 
 [[Polynomials]]
 deps = ["LinearAlgebra", "SparseArrays", "Test"]

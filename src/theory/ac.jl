@@ -1,6 +1,7 @@
 export ACTheory
 
 using Combinatorics
+using DataStructures
 
 
 struct ACTheory <: AbstractTheory end
@@ -8,14 +9,15 @@ struct ACTheory <: AbstractTheory end
 
 struct ACTerm <: AbstractTerm
     root::Σ
-    args::Dict{Union{Variable,AbstractTerm},UInt}
+    args::OrderedDict{Union{Variable,AbstractTerm},UInt}
+    ACTerm(root, args) = new(root, sort(args, lt=(>ₜ), rev=true))
 end
 
 function term(::ACTheory, root, args)
     @assert !isempty(args)
     length(args) == 1 && return first(args)
 
-    dict = Dict{Union{Variable,AbstractTerm},UInt}()
+    dict = OrderedDict{Union{Variable,AbstractTerm},UInt}()
     for arg ∈ args
         if isa(arg, ACTerm) && arg.root == root
             merge!(+, dict, arg.args)
@@ -39,21 +41,28 @@ function Base.convert(::Type{Expr}, t::ACTerm)
 end
 
 theory(::Type{ACTerm}) = ACTheory()
-priority(::Type{ACTerm}) = 40
+priority(::Type{ACTerm}) = 20
 
-vars(t::ACTerm) = mapreduce(vars, ∪, t.args; init=Set{Variable}())
+vars(t::ACTerm) = mapreduce(vars, ∪, keys(t.args); init=Set{Variable}())
 
 Base.:(==)(a::ACTerm, b::ACTerm) = a.root == b.root && a.args == b.args
 
 function (a::ACTerm >ₜ b::ACTerm)
     a.root == b.root || return a.root >ₑ b.root
-    return false  # TODO
+    length(a) == length(b) || return length(a.args) > length(b.args)
+
+    for ((p, i), (q, j)) ∈ zip(a.args, b.args)
+        i == j || return i > j
+        p == q || return p >ₜ q
+    end
+
+    return false
 end
 
 Base.hash(t::ACTerm, h::UInt) = hash(t.args, hash(t.root, hash(ACTerm, h)))
 
 function Base.map(f, p::ACTerm)
-    dict = Dict{Union{Variable,AbstractTerm},UInt}()
+    dict = OrderedDict{Union{Variable,AbstractTerm},UInt}()
 
     for (t, k) ∈ p.args
         t′ = f(t)
@@ -131,6 +140,7 @@ _build_ac((root, linear_variables), partition) = Dict(
     for (x, args) ∈ zip(linear_variables, partition)
 )
 _build_ac(A::ACMatcherSC) = Base.Fix1(_build_ac, (A.root, A.linear_variables))
+_merge(d) = Base.Fix1(merge, d)
 function match!(σ, A::ACMatcherSC, t::ACTerm)
     t.root == A.root || return nothing
     args = copy(t.args)
@@ -162,10 +172,10 @@ function match!(σ, A::ACMatcherSC, t::ACTerm)
         args′ = Dict(s′ => q′ for (s′, q′) ∈ args if s′ ≠ s)
         q == 1 || (args′[s] = q - 1)
 
-        f = part -> merge(_build_ac(A)(part), σ′)
         parts = partitions(_multiplicities_to_vector(args′), length(A.linear_variables))
-        iter = LazyMap(f, LazyFlatten(LazyMap(permutations, parts)))
-        push!(iters, iter)
+        linear_iter = LazyMap(_build_ac(A), LazyFlatten(LazyMap(permutations, parts)))
+        s_iters = LazyMap(m -> LazyMap(_merge(m), linear_iter), Matches(σ′, subproblem))
+        push!(iters, LazyFlatten(s_iters))
     end
     return ACSubproblemSC(LazyFlatten(iters))
 end
