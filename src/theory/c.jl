@@ -57,6 +57,49 @@ function matcher(t::CTerm, V)
     end
 end
 
+function compile(A::CMatcher, V)
+    fn_name = gensym(:match!_c)
+
+    subproblems = gensym(:subproblems)
+    len = gensym(:len)
+
+    cs, csf = compile(A.s, V)
+    ct, ctf = compile(A.t, V)
+
+    return fn_name, quote
+        $(csf.args...)
+        $(ctf.args...)
+        function $fn_name(σ, t)
+            isa(t, $CTerm) || return
+            t.root == $(Meta.quot(A.root)) || return
+
+            $subproblems = $(Tuple{Substitution,Tuple{AbstractSubproblem,AbstractSubproblem}})[]
+
+            $(_compile_expr_c(subproblems, V, cs, ct))
+            $(_compile_expr_c(subproblems, V, ct, cs))
+
+            $len = $length($subproblems)
+            $len == 0 && return
+            $CSubproblem($subproblems)
+        end
+    end
+end
+function _compile_expr_c(subproblems, V, cs, ct)
+    σ′ = gensym(:σ′)
+
+    quote
+        $σ′ = copy(σ)
+
+        x1 = $ct($σ′, t.α)
+        if x1 !== nothing
+            x2 = $cs($σ′, t.β)
+            if x2 !== nothing
+                push!($subproblems, ($σ′, (x1, x2)))
+            end
+        end
+    end
+end
+
 
 struct CSubproblem <: AbstractSubproblem
     subproblems::Vector{Tuple{Substitution,Tuple{AbstractSubproblem,AbstractSubproblem}}}

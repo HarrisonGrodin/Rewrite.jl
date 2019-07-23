@@ -23,3 +23,18 @@ replace(x::Variable, σ) = σ[x]
 >ₜ(::Variable, ::AbstractTerm) = false
 >ₜ(::AbstractTerm, ::Variable) = true
 >ₜ(x::Variable, y::Variable) = objectid(x) > objectid(y)
+
+function compile(x::Variable, V)
+    fn_name = gensym(:match!_var)
+    empty = EmptySubproblem()
+    body = if x ∈ V
+        :(σ[$x] == t ? $empty : nothing)
+    else
+        quote
+            σ[$x] = t
+            $empty
+        end
+    end
+
+    fn_name, Expr(:block, Expr(:function, :($fn_name(σ, t)), body))
+end

@@ -64,6 +64,16 @@ producing a subproblem to solve or producing `nothing` if a match is impossible.
 """
 match!(::Any, ::AbstractMatcher, ::AbstractTerm) = nothing
 
+
+"""
+    compile(pattern::AbstractMatcher, V) -> Tuple{Symbol,Expr}
+
+Compile `pattern` to a native `Expr` containing a function for matching against `pattern`,
+given that the variables in `V` are fixed.
+"""
+compile(pattern::AbstractTerm)
+
+
 """
     replace(pattern::AbstractTerm, σ::Substitution) -> AbstractTerm
 

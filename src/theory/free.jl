@@ -163,6 +163,88 @@ function match_aux!(m, A, σ, aliens, t)
     end
 end
 
+function compile(A::FreeMatcher, V)
+    fn_name = gensym(:match!_free)
+    V′ = V ∪ A.vars
+
+    aliens = similar(A.matchers, AbstractTerm)
+    subproblems = similar(A.matchers, AbstractSubproblem)
+
+    vars_seen = [x ∈ V for x ∈ A.vars]
+    recursive_matchers = _compile_free_aux(A.m, :t, aliens, A.syms, A.vars, vars_seen)
+
+    alien_matches = []
+    matcher_fns = []
+    for i ∈ A.ϕ
+        a_match = gensym(:a_match)
+        fn, fn_expr = compile(A.matchers[i], V′)
+        append!(matcher_fns, fn_expr.args)
+        body = quote
+            $a_match = $fn(σ, $aliens[$i])
+            $a_match === nothing && return nothing
+            $subproblems[$i] = $a_match
+        end
+        @assert body.head === :block
+        append!(alien_matches, body.args)
+    end
+
+    subs_expr = isempty(subproblems) ? EmptySubproblem() :
+                length(subproblems) == 1 ? :($subproblems[1]) : FreeSubproblem(subproblems)
+
+    fn_name, quote
+        $(matcher_fns...)
+        function $fn_name(σ, t)
+            $(recursive_matchers.args...)
+            $(alien_matches...)
+            $subs_expr
+        end
+    end
+end
+function _compile_free_aux(m, t, aliens, syms, vars, vars_seen)
+    idx = m.idx
+
+    if m.kind === VAR
+        x = vars[idx]
+        if vars_seen[idx]
+            return quote
+                σ[$x] == $t || return nothing
+            end
+        else
+            vars_seen[idx] = true
+            return quote
+                σ[$x] = $t
+            end
+        end
+    end
+
+    if m.kind === NODE
+        t′ = t
+        t = gensym(:t)
+        recs = [_compile_free_aux(arg, :($t.args[$i]), aliens, syms, vars, vars_seen)
+                for (i, arg) ∈ enumerate(m.args)]
+        recursive_calls = []
+        for rec ∈ recs
+            if rec.head === :block
+                append!(recursive_calls, rec.args)
+            else
+                push!(recursive_calls, rec)
+            end
+        end
+
+        return quote
+            $t = $t′
+            isa($t, $FreeTerm) || return
+            $t.root == $(Meta.quot(syms[idx])) || return
+            length($t.args) == $(length(m.args)) || return
+            $(recursive_calls...)
+        end
+    else
+        quote
+            $aliens[$(m.idx)] = $t
+        end
+    end
+end
+
 
 Base.iterate(iter::Matches{FreeSubproblem}) = _aiterate(iter.p, iter.s.subproblems...)
 Base.iterate(iter::Matches{FreeSubproblem}, st) = _aiterate1(iter.p, (iter.s.subproblems...,), st)
