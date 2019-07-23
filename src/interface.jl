@@ -44,12 +44,12 @@ function >ₜ end
 
 
 """
-    compile(t::AbstractTerm, V::Set{Variable}) -> Tuple{AbstractMatcher,Set{Variable}}
+    matcher(t::AbstractTerm, V::Set{Variable}) -> Tuple{AbstractMatcher,Set{Variable}}
 
-Compile `t` to a matcher, given that variables `V` will already be matched. Produce a set
+Generate a matcher for `t`, given that variables `V` will already be matched. Produce a set
 of variables which are guaranteed to be fixed during matching.
 """
-function compile end
+function matcher end
 
 """
     match!(σ, pattern::AbstractMatcher, term::AbstractTerm) -> Union{AbstractSubproblem,Nothing}

@@ -88,11 +88,11 @@ end
 
 function _find_permutation(aliens, V)
     # TODO: improve efficiency using monotonicity
-    matchers, V_best = compile_many(aliens, V)
+    matchers, V_best = many_matchers(aliens, V)
     ϕ = eachindex(aliens)
 
     for ψ ∈ permutations(eachindex(aliens))
-        result, V′ = compile_many(aliens[ψ], V)
+        result, V′ = many_matchers(aliens[ψ], V)
         if length(V′) > length(V_best)
             (matchers, V_best, ϕ) = (result, num_fixed, ψ)
         end
@@ -101,7 +101,7 @@ function _find_permutation(aliens, V)
     return (matchers, V_best, ϕ)
 end
 
-function compile(t::FreeTerm, V)
+function matcher(t::FreeTerm, V)
     syms = Σ[]
     vars = Variable[]
     aliens = AbstractTerm[]
@@ -177,7 +177,7 @@ end
 rewriter(::FreeTheory) = FreeRewriter(Dict{Σ,Vector{Pair{FreeMatcher,Any}}}())
 function Base.push!(rw::FreeRewriter, (p, b)::Pair{FreeTerm})
     haskey(rw.rules, p.root) || (rw.rules[p.root] = Pair{FreeMatcher,Any}[])
-    push!(rw.rules[p.root], compile(p) => b)
+    push!(rw.rules[p.root], matcher(p) => b)
     rw
 end
 

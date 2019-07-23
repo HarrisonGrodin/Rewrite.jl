@@ -1,7 +1,7 @@
-function compile_many(ps::Vector, V)
+function many_matchers(ps::Vector, V)
     matchers = similar(ps, Union{AbstractMatcher,Variable})
     for (i, p) ∈ enumerate(ps)
-        matchers[i], V::Set{Variable} = compile(p, V)
+        matchers[i], V::Set{Variable} = matcher(p, V)
     end
     return matchers, V
 end
