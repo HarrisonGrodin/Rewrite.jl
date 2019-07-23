@@ -71,7 +71,7 @@ match!(::Any, ::AbstractMatcher, ::AbstractTerm) = nothing
 Compile `pattern` to a native `Expr` containing a function for matching against `pattern`,
 given that the variables in `V` are fixed.
 """
-compile(pattern::AbstractTerm)
+compile(pattern::AbstractMatcher) = compile(pattern, Set{Variable}())
 
 
 """
@@ -94,3 +94,11 @@ function rewriter end
 Rewrite `t` using `rw`, producing `nothing` if the process fails.
 """
 function rewrite end
+
+"""
+    compile(rw::AbstractRewriter) -> Tuple{Symbol,Expr}
+
+Compile `rw` to a native `Expr` containing a function for rewriting with respect to `rw`.
+If `name` is provided, the function will be defined as `name`.
+"""
+compile(rw::AbstractRewriter)

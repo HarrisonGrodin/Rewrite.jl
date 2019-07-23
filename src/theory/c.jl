@@ -196,3 +196,45 @@ function rewrite(rw::CRewriter, t::CTerm)
 
     return nothing
 end
+
+function compile(rw::CRewriter)
+    fn_name = gensym(:rewrite_c)
+
+    matcher_exprs = Expr[]
+
+    rules = Dict()
+    for (root, matchers) ∈ rw.rules
+        rules[root] = []
+        for (p, b) ∈ matchers
+            fn, expr = compile(p)
+            push!(matcher_exprs, expr)
+            push!(rules[root], fn => b)
+        end
+    end
+
+    index = gensym(:rewrite_c_map)
+
+    fn_name, quote
+        $(matcher_exprs...)
+        $index = Dict($((
+            :($(Meta.quot(root)) => $(:([$((:($fn => $b) for (fn, b) ∈ rs)...)])))
+            for (root, rs) ∈ rules
+        )...))
+        function $fn_name(t)
+            $haskey($rules, t.root) || return
+
+            σ = $Substitution()
+
+            for (match_fn, builder) ∈ $index[t.root]
+                m = match_fn(σ, t)
+                m === nothing && continue
+                next = iterate($Matches(σ, m))
+                next === nothing && continue
+                σ = next[1]
+                return builder(σ)::$AbstractTerm
+            end
+
+            return
+        end
+    end
+end

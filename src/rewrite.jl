@@ -25,3 +25,36 @@ function rewrite(rw::Rewriter, t::AbstractTerm)
         t = t′
     end
 end
+
+function compile(rw::Rewriter)
+    fn_name = gensym(:rewrite)
+
+    rewriter_exprs = Expr[]
+
+    rewriters = Dict()
+    for (th, rewriter) ∈ rw.rewriters
+        fn, expr = compile(rewriter)
+        rewriters[th] = fn
+        push!(rewriter_exprs, expr)
+    end
+
+    @info rewriters
+
+    tree = gensym(:rewriter_TREE)
+
+    fn_name, quote
+        $(rewriter_exprs...)
+        $tree = Dict($((:($th => $fn) for (th, fn) ∈ rewriters)...))
+        function $fn_name(t)
+            while true
+                th = $theory(t)
+                t = map($fn_name, t)
+                $haskey($tree, th) || return t
+
+                t′ = $tree[th](t)
+                t′ === nothing && return t
+                t = t′
+            end
+        end
+    end
+end
