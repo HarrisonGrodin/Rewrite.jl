@@ -49,7 +49,7 @@ Base.:(==)(a::ACTerm, b::ACTerm) = a.root == b.root && a.args == b.args
 
 function (a::ACTerm >ₜ b::ACTerm)
     a.root == b.root || return a.root >ₑ b.root
-    length(a) == length(b) || return length(a.args) > length(b.args)
+    length(a.args) == length(b.args) || return length(a.args) > length(b.args)
 
     for ((p, i), (q, j)) ∈ zip(a.args, b.args)
         i == j || return i > j
@@ -116,7 +116,7 @@ function compile(t::ACTerm, V)
     isempty(linear_variables) && error("AC pattern not yet supported: $t")
     length(alien_subterms) ≤ 1 || error("AC pattern not yet supported: $t")
 
-    union!(V, linear_variables)
+    union!(V′, linear_variables)
 
     return ACMatcherSC(t.root, ground_subterms, alien_subterms, linear_variables), V′
 end
@@ -158,7 +158,7 @@ function match!(σ, A::ACMatcherSC, t::ACTerm)
     if naliens == 0
         parts = partitions(_multiplicities_to_vector(args), length(A.linear_variables))
         iter = LazyMap(_build_ac(A), LazyFlatten(LazyMap(permutations, parts)))
-        return ACSubproblemSC(iter)
+        return ACSubproblemSC(LazyMap(_merge(σ), iter))
     end
 
     @assert naliens == 1
