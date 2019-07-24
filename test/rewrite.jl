@@ -1,17 +1,17 @@
 @testset "empty" begin
     @rules Demo [] begin end
-    @test Demo(a()) == a()
-    @test Demo(f(a())) == f(a())
+    @test Demo(a) == a
+    @test Demo(f(a)) == f(a)
 end
 
 @testset "free, simple" begin
     @rules Demo [x] begin
         f(x) := g(x)
     end
-    @test Demo(f(a())) == g(a())
-    @test Demo(h(f(a()))) == h(g(a()))
-    @test Demo(g(a())) == g(a())
-    @test Demo(h(a())) == h(a())
+    @test Demo(f(a)) == g(a)
+    @test Demo(h(f(a))) == h(g(a))
+    @test Demo(g(a)) == g(a)
+    @test Demo(h(a)) == h(a)
 end
 
 @testset "free, complex" begin
@@ -21,9 +21,9 @@ end
             h(x, x, y) := p(x, y)
         end
 
-        @test Demo(f(a())) == g(a())
-        @test Demo(h(a(), a(), b())) == p(a(), b())
-        @test Demo(h(a(), b(), b())) == h(a(), b(), b())
+        @test Demo(f(a)) == g(a)
+        @test Demo(h(a, a, b)) == p(a, b)
+        @test Demo(h(a, b, b)) == h(a, b, b)
     end
 
     @testset "overlapping" begin
@@ -32,9 +32,9 @@ end
             f(g(x)) := h(x)
         end
 
-        @test Demo(f(a())) == g(a())
-        @test Demo(f(g(a()))) ∈ [g(g(a())), h(a())]
-        @test Demo(g(a())) == g(a())
+        @test Demo(f(a)) == g(a)
+        @test Demo(f(g(a))) ∈ [g(g(a)), h(a)]
+        @test Demo(g(a)) == g(a)
     end
 
     @testset "identical" begin
@@ -43,8 +43,8 @@ end
             f(x) := h(x)
         end
 
-        @test Demo(f(a())) ∈ [g(a()), h(a())]
-        @test Demo(f(f(a()))) ∈ [g(g(a())), g(h(a())), h(g(a())), h(h(a()))]
+        @test Demo(f(a)) ∈ [g(a), h(a)]
+        @test Demo(f(f(a))) ∈ [g(g(a)), g(h(a)), h(g(a)), h(h(a))]
     end
 end
 
@@ -53,41 +53,41 @@ end
         p(x, x) := x
     end
 
-    @test Demo(p(a(), a())) == a()
-    @test Demo(p(b(), b())) == b()
-    @test Demo(p(a(), b())) == p(a(), b())
+    @test Demo(p(a, a)) == a
+    @test Demo(p(b, b)) == b
+    @test Demo(p(a, b)) == p(a, b)
 end
 
 @testset "commutative, complex" begin
     @testset "orthogonal" begin
         @rules Demo [x] begin
-            p(a(), x)   := x
-            p(b(), b()) := c()
+            p(a, x)   := x
+            p(b, b) := c
         end
 
-        @test Demo(p(a(), b())) == b()
-        @test Demo(f(p(a(), b()))) == f(b())
+        @test Demo(p(a, b)) == b
+        @test Demo(f(p(a, b))) == f(b)
     end
 
     @testset "overlapping" begin
         @rules Demo [x] begin
-            p(a(), x) := a()
-            p(x, b()) := b()
+            p(a, x) := a
+            p(x, b) := b
         end
 
-        @test Demo(p(a(), c())) == a()
-        @test Demo(p(b(), c())) == b()
-        @test Demo(p(a(), b())) ∈ [a(), b()]
+        @test Demo(p(a, c)) == a
+        @test Demo(p(b, c)) == b
+        @test Demo(p(a, b)) ∈ [a, b]
     end
 
     @testset "identical" begin
         @rules Demo [x, y] begin
             p(x, y) := q(x, x)
-            q(x, x) := a()
-            q(x, x) := b()
+            q(x, x) := a
+            q(x, x) := b
         end
 
-        @test Demo(p(c(), c())) ∈ [a(), b()]
+        @test Demo(p(c, c)) ∈ [a, b]
     end
 end
 

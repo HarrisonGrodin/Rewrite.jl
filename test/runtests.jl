@@ -13,9 +13,9 @@ using Test
     q => CTheory()
 end
 
-a(xs...) = @term(a($(xs...)))
-b(xs...) = @term(b($(xs...)))
-c(xs...) = @term(c($(xs...)))
+a = @term(a)
+b = @term(b)
+c = @term(c)
 f(xs...) = @term(f($(xs...)))
 g(xs...) = @term(g($(xs...)))
 h(xs...) = @term(h($(xs...)))
