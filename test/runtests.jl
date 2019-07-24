@@ -1,4 +1,4 @@
-using Terms
+using Rewrite
 using Test
 
 

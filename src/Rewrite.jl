@@ -1,4 +1,4 @@
-module Terms
+module Rewrite
 
 include("core.jl")
 include("theory.jl")
