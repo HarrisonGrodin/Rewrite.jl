@@ -57,6 +57,37 @@ function matcher(t::CTerm, V)
     end
 end
 
+
+struct CSubproblem <: AbstractSubproblem
+    subproblems::Vector{Tuple{Substitution,Tuple{AbstractSubproblem,AbstractSubproblem}}}
+end
+
+function _match_c!(subproblems, σ, s, t, α, β)
+    σ′ = copy(σ)
+
+    x1 = match!(σ′, s, α)
+    x1 === nothing && return
+
+    x2 = match!(σ′, t, β)
+    x2 === nothing && return
+
+    push!(subproblems, (σ′, (x1, x2)))
+
+    nothing
+end
+function match!(σ, A::CMatcher, t::CTerm)
+    A.root == t.root || return nothing
+
+    subproblems = Tuple{Substitution,Tuple{AbstractSubproblem,AbstractSubproblem}}[]
+
+    _match_c!(subproblems, σ, A.s, A.t, t.α, t.β)
+    _match_c!(subproblems, σ, A.s, A.t, t.β, t.α)
+
+    isempty(subproblems) && return nothing
+
+    return CSubproblem(subproblems)
+end
+
 function compile(A::CMatcher, V)
     fn_name = gensym(:match!_c)
 
@@ -98,37 +129,6 @@ function _compile_expr_c(subproblems, V, cs, ct)
             end
         end
     end
-end
-
-
-struct CSubproblem <: AbstractSubproblem
-    subproblems::Vector{Tuple{Substitution,Tuple{AbstractSubproblem,AbstractSubproblem}}}
-end
-
-function _match_c!(subproblems, σ, s, t, α, β)
-    σ′ = copy(σ)
-
-    x1 = match!(σ′, s, α)
-    x1 === nothing && return
-
-    x2 = match!(σ′, t, β)
-    x2 === nothing && return
-
-    push!(subproblems, (σ′, (x1, x2)))
-
-    nothing
-end
-function match!(σ, A::CMatcher, t::CTerm)
-    A.root == t.root || return nothing
-
-    subproblems = Tuple{Substitution,Tuple{AbstractSubproblem,AbstractSubproblem}}[]
-
-    _match_c!(subproblems, σ, A.s, A.t, t.α, t.β)
-    _match_c!(subproblems, σ, A.s, A.t, t.β, t.α)
-
-    isempty(subproblems) && return nothing
-
-    return CSubproblem(subproblems)
 end
 
 
