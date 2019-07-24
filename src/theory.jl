@@ -27,7 +27,6 @@ function _to_theory(th, expr; strict=false)
         throw(ArgumentError("invalid expression: $(repr(expr))"))
     end
 
-    strict = false  # FIXME
     root_theory = haskey(th, root) ? th[root] :
         strict ? throw(ArgumentError("$root undefined in theory")) : FreeTheory()
 

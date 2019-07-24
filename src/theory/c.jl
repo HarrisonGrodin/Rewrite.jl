@@ -18,7 +18,7 @@ end
 Base.convert(::Type{Expr}, t::CTerm) = Expr(:call, t.root, convert(Expr, t.α), convert(Expr, t.β))
 
 theory(::Type{CTerm}) = CTheory()
-priority(::Type{CTerm}) = 20
+priority(::Type{CTerm}) = 50
 
 vars(t::CTerm) = vars(t.α) ∪ vars(t.β)
 
@@ -76,6 +76,7 @@ function _match_c!(subproblems, σ, s, t, α, β)
     nothing
 end
 function match!(σ, A::CMatcher, t::CTerm)
+    isa(t, CTerm) || return nothing
     A.root == t.root || return nothing
 
     subproblems = Tuple{Substitution,Tuple{AbstractSubproblem,AbstractSubproblem}}[]
@@ -168,9 +169,6 @@ function Base.iterate(iter::Matches{CSubproblem}, (i, P₁, states))
     (P, states) = next
     return (P, (i, P₁, states))
 end
-
-
-replace(p::CTerm, σ) = CTerm(p.root, replace(p.α, σ), replace(p.β, σ))
 
 
 struct CRewriter <: AbstractRewriter

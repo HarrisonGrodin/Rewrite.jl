@@ -6,6 +6,7 @@ include("interface.jl")
 
 include("theory/free.jl")
 include("theory/c.jl")
+include("theory/ac.jl")
 
 include("util.jl")
 
