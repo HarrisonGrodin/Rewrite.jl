@@ -161,6 +161,39 @@ TESTS = [
             ]
         ),
     ],
+    "ac" => [
+        (
+            s(b, x),
+            [
+                (s(a, b), [Dict(x => a)]),
+                (s(a, b, c), [Dict(x => s(a, c))]),
+                (s(a, c), []),
+            ]
+        ),
+        (
+            s(a, b, c, x),
+            [
+                (s(a, b, c, b), [Dict(x => b)]),
+                (s(a, c, a, b), [Dict(x => a)]),
+                (s(c, c, b, a, b), [Dict(x => s(b, c))]),
+                (s(a, b, c), []),
+                (s(a, b), []),
+            ]
+        ),
+        (
+            s(x, y),
+            [
+                (s(a, b), [Dict(x => a, y => b),
+                           Dict(x => b, y => a)]),
+                (s(a, b, c), [Dict(x => a, y => s(b, c)),
+                              Dict(x => b, y => s(a, c)),
+                              Dict(x => c, y => s(a, b)),
+                              Dict(y => a, x => s(b, c)),
+                              Dict(y => b, x => s(a, c)),
+                              Dict(y => c, x => s(a, b))]),
+            ]
+        )
+    ],
     "general" => [
         (
             f(p(a, x), b),

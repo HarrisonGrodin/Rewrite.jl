@@ -25,3 +25,13 @@ end
     @test p(q(x, a), q(x, b)) == p(q(b, x), q(x, a))
     @test p(f(a, b), f(a, c)) == p(f(a, c), f(a, b))
 end
+
+@testset "ac" begin
+    @test s(a, b) == s(a, b)
+    @test s(a, b) == s(b, a)
+    @test s(a, b, c) == s(c, a, b)
+    @test s(a, x, b) == s(b, a, x)
+    @test s(a, s(b, c)) == s(a, b, c)
+    @test s(a, t(b, c)) ≠ s(a, b, c)
+    @test s(a, s(b, c, a), s(c)) == s(a, a, b, c, c)
+end
