@@ -184,19 +184,6 @@ function Base.push!(rw::CRewriter, (p, b)::Pair{CTerm})
     rw
 end
 
-function rewrite(rw::CRewriter, t::CTerm)
-    haskey(rw.rules, t.root) || return nothing
-
-    for (pattern, builder) ∈ rw.rules[t.root]
-        next = iterate(match(pattern, t))
-        next === nothing && continue
-        σ = next[1]
-        return builder(σ)::AbstractTerm
-    end
-
-    return nothing
-end
-
 function compile(rw::CRewriter)
     fn_name = gensym(:rewrite_c)
 

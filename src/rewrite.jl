@@ -13,19 +13,6 @@ function Base.push!(rw::Rewriter, (p, b)::Pair{<:AbstractTerm})
     rw
 end
 
-rewrite(rw::Rewriter) = Base.Fix1(rewrite, rw)
-function rewrite(rw::Rewriter, t::AbstractTerm)
-    while true
-        th = theory(t)
-        t = map(rewrite(rw), t)
-        haskey(rw.rewriters, th) || return t
-
-        t′ = rewrite(rw.rewriters[th], t)
-        t′ === nothing && return t
-        t = t′
-    end
-end
-
 function compile(rw::Rewriter)
     fn_name = gensym(:rewrite)
 

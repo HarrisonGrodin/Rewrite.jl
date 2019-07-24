@@ -11,7 +11,6 @@ struct FreeTerm <: AbstractTerm
     root::Σ
     args::Vector{Union{Variable,AbstractTerm}}
 end
-FreeTerm(root) = FreeTerm(root, Union{Variable,AbstractTerm}[])
 
 term(::FreeTheory, root, args) = FreeTerm(root, args)
 Base.convert(::Type{Expr}, t::FreeTerm) = Expr(:call, t.root, convert.(Expr, t.args)...)
@@ -261,19 +260,6 @@ function Base.push!(rw::FreeRewriter, (p, b)::Pair{FreeTerm})
     haskey(rw.rules, p.root) || (rw.rules[p.root] = Pair{FreeMatcher,Any}[])
     push!(rw.rules[p.root], matcher(p) => b)
     rw
-end
-
-function rewrite(rw::FreeRewriter, t::FreeTerm)
-    haskey(rw.rules, t.root) || return nothing
-
-    for (pattern, builder) ∈ rw.rules[t.root]
-        next = iterate(match(pattern, t))
-        next === nothing && continue
-        σ = next[1]
-        return builder(σ)::AbstractTerm
-    end
-
-    return nothing
 end
 
 function compile(rw::FreeRewriter)
