@@ -2,7 +2,7 @@ using Terms
 using Test
 
 
-@theory Example begin
+@theory! begin
     a => FreeTheory()
     b => FreeTheory()
     c => FreeTheory()
@@ -13,14 +13,14 @@ using Test
     q => CTheory()
 end
 
-a(xs...) = @term(Example, a($(xs...)))
-b(xs...) = @term(Example, b($(xs...)))
-c(xs...) = @term(Example, c($(xs...)))
-f(xs...) = @term(Example, f($(xs...)))
-g(xs...) = @term(Example, g($(xs...)))
-h(xs...) = @term(Example, h($(xs...)))
-p(x, y) = @term(Example, p($x, $y))
-q(x, y) = @term(Example, q($x, $y))
+a(xs...) = @term(a($(xs...)))
+b(xs...) = @term(b($(xs...)))
+c(xs...) = @term(c($(xs...)))
+f(xs...) = @term(f($(xs...)))
+g(xs...) = @term(g($(xs...)))
+h(xs...) = @term(h($(xs...)))
+p(x, y) = @term(p($x, $y))
+q(x, y) = @term(q($x, $y))
 x, y, z = Variable(), Variable(), Variable()
 
 
