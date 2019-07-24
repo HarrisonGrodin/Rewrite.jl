@@ -1,9 +1,9 @@
 """
-    compile(t::AbstractTerm) -> AbstractMatcher
+    matcher(t::AbstractTerm) -> AbstractMatcher
 
-Compile `t` to a matcher.
+Build the matcher for `t`.
 """
-compile(t) = compile(t, Set{Variable}())[1]
+matcher(t) = matcher(t, Set{Variable}())[1]
 
 
 const Substitution = Dict{Variable,AbstractTerm}
@@ -30,7 +30,7 @@ function match(p::AbstractMatcher, t::AbstractTerm)
     s === nothing && return fail
     Matches(σ, s)
 end
-match(p::AbstractTerm, t::AbstractTerm) = match(compile(p), t)
+match(p::AbstractTerm, t::AbstractTerm) = match(matcher(p), t)
 
 
 struct EmptySubproblem <: AbstractSubproblem end

@@ -11,7 +11,6 @@ struct FreeTerm <: AbstractTerm
     root::Σ
     args::Vector{Union{Variable,AbstractTerm}}
 end
-FreeTerm(root) = FreeTerm(root, Union{Variable,AbstractTerm}[])
 
 term(::FreeTheory, root, args) = FreeTerm(root, args)
 Base.convert(::Type{Expr}, t::FreeTerm) = Expr(:call, t.root, convert.(Expr, t.args)...)
@@ -88,11 +87,11 @@ end
 
 function _find_permutation(aliens, V)
     # TODO: improve efficiency using monotonicity
-    matchers, V_best = compile_many(aliens, V)
+    matchers, V_best = many_matchers(aliens, V)
     ϕ = eachindex(aliens)
 
     for ψ ∈ permutations(eachindex(aliens))
-        result, V′ = compile_many(aliens[ψ], V)
+        result, V′ = many_matchers(aliens[ψ], V)
         if length(V′) > length(V_best)
             (matchers, V_best, ϕ) = (result, num_fixed, ψ)
         end
@@ -101,7 +100,7 @@ function _find_permutation(aliens, V)
     return (matchers, V_best, ϕ)
 end
 
-function compile(t::FreeTerm, V)
+function matcher(t::FreeTerm, V)
     syms = Σ[]
     vars = Variable[]
     aliens = AbstractTerm[]
@@ -163,6 +162,88 @@ function match_aux!(m, A, σ, aliens, t)
     end
 end
 
+function compile(A::FreeMatcher, V)
+    fn_name = gensym(:match!_free)
+    V′ = V ∪ A.vars
+
+    aliens = similar(A.matchers, AbstractTerm)
+    subproblems = similar(A.matchers, AbstractSubproblem)
+
+    vars_seen = [x ∈ V for x ∈ A.vars]
+    recursive_matchers = _compile_free_aux(A.m, :t, aliens, A.syms, A.vars, vars_seen)
+
+    alien_matches = []
+    matcher_fns = []
+    for i ∈ A.ϕ
+        a_match = gensym(:a_match)
+        fn, fn_expr = compile(A.matchers[i], V′)
+        append!(matcher_fns, fn_expr.args)
+        body = quote
+            $a_match = $fn(σ, $aliens[$i])
+            $a_match === nothing && return nothing
+            $subproblems[$i] = $a_match
+        end
+        @assert body.head === :block
+        append!(alien_matches, body.args)
+    end
+
+    subs_expr = isempty(subproblems) ? EmptySubproblem() :
+                length(subproblems) == 1 ? :($subproblems[1]) : FreeSubproblem(subproblems)
+
+    fn_name, quote
+        $(matcher_fns...)
+        function $fn_name(σ, t)
+            $(recursive_matchers.args...)
+            $(alien_matches...)
+            $subs_expr
+        end
+    end
+end
+function _compile_free_aux(m, t, aliens, syms, vars, vars_seen)
+    idx = m.idx
+
+    if m.kind === VAR
+        x = vars[idx]
+        if vars_seen[idx]
+            return quote
+                σ[$x] == $t || return nothing
+            end
+        else
+            vars_seen[idx] = true
+            return quote
+                σ[$x] = $t
+            end
+        end
+    end
+
+    if m.kind === NODE
+        t′ = t
+        t = gensym(:t)
+        recs = [_compile_free_aux(arg, :($t.args[$i]), aliens, syms, vars, vars_seen)
+                for (i, arg) ∈ enumerate(m.args)]
+        recursive_calls = []
+        for rec ∈ recs
+            if rec.head === :block
+                append!(recursive_calls, rec.args)
+            else
+                push!(recursive_calls, rec)
+            end
+        end
+
+        return quote
+            $t = $t′
+            isa($t, $FreeTerm) || return
+            $t.root == $(Meta.quot(syms[idx])) || return
+            length($t.args) == $(length(m.args)) || return
+            $(recursive_calls...)
+        end
+    else
+        quote
+            $aliens[$(m.idx)] = $t
+        end
+    end
+end
+
 
 Base.iterate(iter::Matches{FreeSubproblem}) = _aiterate(iter.p, iter.s.subproblems...)
 Base.iterate(iter::Matches{FreeSubproblem}, st) = _aiterate1(iter.p, (iter.s.subproblems...,), st)
@@ -175,19 +256,48 @@ end
 rewriter(::FreeTheory) = FreeRewriter(Dict{Σ,Vector{Pair{FreeMatcher,Any}}}())
 function Base.push!(rw::FreeRewriter, (p, b)::Pair{FreeTerm})
     haskey(rw.rules, p.root) || (rw.rules[p.root] = Pair{FreeMatcher,Any}[])
-    push!(rw.rules[p.root], compile(p) => b)
+    push!(rw.rules[p.root], matcher(p) => b)
     rw
 end
 
-function rewrite(rw::FreeRewriter, t::FreeTerm)
-    haskey(rw.rules, t.root) || return nothing
+function compile(rw::FreeRewriter)
+    fn_name = gensym(:rewrite_free)
 
-    for (pattern, builder) ∈ rw.rules[t.root]
-        next = iterate(match(pattern, t))
-        next === nothing && continue
-        σ = next[1]
-        return builder(σ)::AbstractTerm
+    matcher_exprs = Expr[]
+
+    rules = Dict()
+    for (root, matchers) ∈ rw.rules
+        rules[root] = []
+        for (p, b) ∈ matchers
+            fn, expr = compile(p)
+            push!(matcher_exprs, expr)
+            push!(rules[root], fn => b)
+        end
     end
 
-    return nothing
+    index = gensym(:rewrite_free_tree)
+
+    fn_name, quote
+        $(matcher_exprs...)
+        $index = Dict($((
+            :($(Meta.quot(root)) => $(:([$((:($fn => $b) for (fn, b) ∈ rs)...)])))
+            for (root, rs) ∈ rules
+        )...))
+        function $fn_name(t)
+            $haskey($rules, t.root) || return
+
+            σ = $Substitution()
+
+            for (match_fn, builder) ∈ $index[t.root]
+                m = match_fn(σ, t)
+                m === nothing && continue
+                next = iterate($Matches(σ, m))
+                next === nothing && continue
+                σ = next[1]
+                return builder(σ)::$AbstractTerm
+            end
+
+            return
+        end
+    end
 end

@@ -44,12 +44,12 @@ function >ₜ end
 
 
 """
-    compile(t::AbstractTerm, V::Set{Variable}) -> Tuple{AbstractMatcher,Set{Variable}}
+    matcher(t::AbstractTerm, V::Set{Variable}) -> Tuple{AbstractMatcher,Set{Variable}}
 
-Compile `t` to a matcher, given that variables `V` will already be matched. Produce a set
+Generate a matcher for `t`, given that variables `V` will already be matched. Produce a set
 of variables which are guaranteed to be fixed during matching.
 """
-function compile end
+function matcher end
 
 """
     match!(σ, pattern::AbstractMatcher, term::AbstractTerm) -> Union{AbstractSubproblem,Nothing}
@@ -63,6 +63,16 @@ producing a subproblem to solve or producing `nothing` if a match is impossible.
     necessarily produce `nothing`.
 """
 match!(::Any, ::AbstractMatcher, ::AbstractTerm) = nothing
+
+
+"""
+    compile(pattern::AbstractMatcher, V) -> Tuple{Symbol,Expr}
+
+Compile `pattern` to a native `Expr` containing a function for matching against `pattern`,
+given that the variables in `V` are fixed.
+"""
+compile(pattern::AbstractMatcher) = compile(pattern, Set{Variable}())
+
 
 """
     map(f, t::AbstractTerm) -> AbstractTerm
@@ -84,3 +94,11 @@ function rewriter end
 Rewrite `t` using `rw`, producing `nothing` if the process fails.
 """
 function rewrite end
+
+"""
+    compile(rw::AbstractRewriter) -> Tuple{Symbol,Expr}
+
+Compile `rw` to a native `Expr` containing a function for rewriting with respect to `rw`.
+If `name` is provided, the function will be defined as `name`.
+"""
+compile(rw::AbstractRewriter)

@@ -40,15 +40,15 @@ struct CMatcher <: AbstractMatcher
     t::Union{Variable,AbstractMatcher}
 end
 
-function compile(t::CTerm, V)
+function matcher(t::CTerm, V)
     if isa(t.α, Variable) | isa(t.β, Variable) || theory(t.α) === theory(t.β)
-        (cα, _) = compile(t.α, V)
-        (cβ, _) = compile(t.β, V)
+        (cα, _) = matcher(t.α, V)
+        (cβ, _) = matcher(t.β, V)
         return CMatcher(t.root, cα, cβ), V
     end
 
-    (αβ, V1) = compile_many([t.α, t.β], V)
-    (βα, V2) = compile_many([t.β, t.α], V)
+    (αβ, V1) = many_matchers([t.α, t.β], V)
+    (βα, V2) = many_matchers([t.β, t.α], V)
 
     if length(V2) > length(V1)
         return CMatcher(t.root, βα[1], βα[2]), V2
@@ -86,6 +86,49 @@ function match!(σ, A::CMatcher, t::CTerm)
     isempty(subproblems) && return nothing
 
     return CSubproblem(subproblems)
+end
+
+function compile(A::CMatcher, V)
+    fn_name = gensym(:match!_c)
+
+    subproblems = gensym(:subproblems)
+    len = gensym(:len)
+
+    cs, csf = compile(A.s, V)
+    ct, ctf = compile(A.t, V)
+
+    return fn_name, quote
+        $(csf.args...)
+        $(ctf.args...)
+        function $fn_name(σ, t)
+            isa(t, $CTerm) || return
+            t.root == $(Meta.quot(A.root)) || return
+
+            $subproblems = $(Tuple{Substitution,Tuple{AbstractSubproblem,AbstractSubproblem}})[]
+
+            $(_compile_expr_c(subproblems, V, cs, ct))
+            $(_compile_expr_c(subproblems, V, ct, cs))
+
+            $len = $length($subproblems)
+            $len == 0 && return
+            $CSubproblem($subproblems)
+        end
+    end
+end
+function _compile_expr_c(subproblems, V, cs, ct)
+    σ′ = gensym(:σ′)
+
+    quote
+        $σ′ = copy(σ)
+
+        x1 = $ct($σ′, t.α)
+        if x1 !== nothing
+            x2 = $cs($σ′, t.β)
+            if x2 !== nothing
+                push!($subproblems, ($σ′, (x1, x2)))
+            end
+        end
+    end
 end
 
 
@@ -134,19 +177,48 @@ end
 rewriter(::CTheory) = CRewriter(Dict{Σ,Vector{Pair{CMatcher,Any}}}())
 function Base.push!(rw::CRewriter, (p, b)::Pair{CTerm})
     haskey(rw.rules, p.root) || (rw.rules[p.root] = Pair{CMatcher,Any}[])
-    push!(rw.rules[p.root], compile(p) => b)
+    push!(rw.rules[p.root], matcher(p) => b)
     rw
 end
 
-function rewrite(rw::CRewriter, t::CTerm)
-    haskey(rw.rules, t.root) || return nothing
+function compile(rw::CRewriter)
+    fn_name = gensym(:rewrite_c)
 
-    for (pattern, builder) ∈ rw.rules[t.root]
-        next = iterate(match(pattern, t))
-        next === nothing && continue
-        σ = next[1]
-        return builder(σ)::AbstractTerm
+    matcher_exprs = Expr[]
+
+    rules = Dict()
+    for (root, matchers) ∈ rw.rules
+        rules[root] = []
+        for (p, b) ∈ matchers
+            fn, expr = compile(p)
+            push!(matcher_exprs, expr)
+            push!(rules[root], fn => b)
+        end
     end
 
-    return nothing
+    index = gensym(:rewrite_c_map)
+
+    fn_name, quote
+        $(matcher_exprs...)
+        $index = Dict($((
+            :($(Meta.quot(root)) => $(:([$((:($fn => $b) for (fn, b) ∈ rs)...)])))
+            for (root, rs) ∈ rules
+        )...))
+        function $fn_name(t)
+            $haskey($rules, t.root) || return
+
+            σ = $Substitution()
+
+            for (match_fn, builder) ∈ $index[t.root]
+                m = match_fn(σ, t)
+                m === nothing && continue
+                next = iterate($Matches(σ, m))
+                next === nothing && continue
+                σ = next[1]
+                return builder(σ)::$AbstractTerm
+            end
+
+            return
+        end
+    end
 end
