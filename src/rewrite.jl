@@ -38,8 +38,6 @@ function compile(rw::Rewriter)
         push!(rewriter_exprs, expr)
     end
 
-    @info rewriters
-
     tree = gensym(:rewriter_TREE)
 
     fn_name, quote

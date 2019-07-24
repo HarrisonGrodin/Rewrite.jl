@@ -31,8 +31,12 @@ function compile(x::Variable, V)
         :(σ[$x] == t ? $empty : nothing)
     else
         quote
-            σ[$x] = t
-            $empty
+            if haskey(σ, $x)
+                σ[$x] == t ? $empty : nothing
+            else
+                σ[$x] = t
+                $empty
+            end
         end
     end
 
