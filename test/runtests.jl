@@ -11,16 +11,20 @@ using Test
     h => FreeTheory()
     p => CTheory()
     q => CTheory()
+    s => ACTheory()
+    t => ACTheory()
 end
 
-a(xs...) = @term(a($(xs...)))
-b(xs...) = @term(b($(xs...)))
-c(xs...) = @term(c($(xs...)))
+a = @term(a)
+b = @term(b)
+c = @term(c)
 f(xs...) = @term(f($(xs...)))
 g(xs...) = @term(g($(xs...)))
 h(xs...) = @term(h($(xs...)))
 p(x, y) = @term(p($x, $y))
 q(x, y) = @term(q($x, $y))
+s(xs...) = @term(s($(xs...)))
+t(xs...) = @term(t($(xs...)))
 x, y, z = Variable(), Variable(), Variable()
 
 

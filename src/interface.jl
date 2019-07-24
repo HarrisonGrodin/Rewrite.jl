@@ -75,11 +75,11 @@ compile(pattern::AbstractMatcher) = compile(pattern, Set{Variable}())
 
 
 """
-    replace(pattern::AbstractTerm, σ::Substitution) -> AbstractTerm
+    map(f, t::AbstractTerm) -> AbstractTerm
 
-Replace each variable subterm `x` of `pattern` with `σ[x]`.
+Call `f` on each subterm of `t`.
 """
-replace(pattern::AbstractTerm, σ::Substitution)
+Base.map(f, t::AbstractTerm)
 
 """
     rewriter(t::AbstractTheory) -> AbstractRewriter
