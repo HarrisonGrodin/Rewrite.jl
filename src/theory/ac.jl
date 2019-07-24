@@ -86,7 +86,7 @@ struct ACMatcherSC <: AbstractMatcher
     linear_variables::Vector{Variable}
 end
 
-function compile(t::ACTerm, V)
+function matcher(t::ACTerm, V)
     ground_subterms = Dict{AbstractTerm,UInt}()
     alien_subterms = AbstractMatcher[]
     linear_variables = Variable[]
@@ -103,7 +103,7 @@ function compile(t::ACTerm, V)
                 isempty(svars ∩ vars(other)) || error("AC pattern not yet supported: $t")
             end
 
-            s_matcher, sV = compile(s, V)
+            s_matcher, sV = matcher(s, V)
             push!(alien_subterms, s_matcher)
             union!(V′, sV)
         elseif isa(s, Variable) && k == 1 && s ∉ V
@@ -142,7 +142,24 @@ _build_ac((root, linear_variables), partition) = Dict(
 _build_ac(A::ACMatcherSC) = Base.Fix1(_build_ac, (A.root, A.linear_variables))
 _merge(d) = Base.Fix1(merge, d)
 function match!(σ, A::ACMatcherSC, t::ACTerm)
+    isa(t, ACTerm) || return
     t.root == A.root || return nothing
+
+    args = _match_ac_args(A, t)
+    args === nothing && return nothing
+
+    nargs = sum(values(args))
+    naliens = length(A.alien_subterms)
+    nargs ≥ length(A.linear_variables) + naliens || return nothing
+    if naliens == 0
+        return _match_ac_0(A, args, σ)
+    elseif naliens == 1
+        return _match_ac_1(A, args, σ)
+    else
+        error("Unsupported state")
+    end
+end
+function _match_ac_args(A, t)
     args = copy(t.args)
 
     for (s, k) ∈ A.ground_subterms
@@ -151,19 +168,17 @@ function match!(σ, A::ACMatcherSC, t::ACTerm)
         args[s] == 0 && delete!(args, s)
     end
 
-    nargs = sum(values(args))
-    naliens = length(A.alien_subterms)
-    nargs ≥ length(A.linear_variables) + naliens || return nothing
-
-    if naliens == 0
-        parts = partitions(_multiplicities_to_vector(args), length(A.linear_variables))
-        iter = LazyMap(_build_ac(A), LazyFlatten(LazyMap(permutations, parts)))
-        return ACSubproblemSC(LazyMap(_merge(σ), iter))
-    end
-
-    @assert naliens == 1
+    return args
+end
+function _match_ac_0(A, args, σ)
+    parts = partitions(_multiplicities_to_vector(args), length(A.linear_variables))
+    iter = LazyMap(_build_ac(A), LazyFlatten(LazyMap(permutations, parts)))
+    return ACSubproblemSC(LazyMap(_merge(σ), iter))
+end
+function _match_ac_1(A, args, σ)
     alien = A.alien_subterms[1]
     iters = []
+
     for (s, q) ∈ args
         σ′ = copy(σ)
         subproblem = match!(σ′, alien, s)
@@ -177,7 +192,38 @@ function match!(σ, A::ACMatcherSC, t::ACTerm)
         s_iters = LazyMap(m -> LazyMap(_merge(m), linear_iter), Matches(σ′, subproblem))
         push!(iters, LazyFlatten(s_iters))
     end
+
     return ACSubproblemSC(LazyFlatten(iters))
+end
+
+function compile(A::ACMatcherSC, V)
+    fn_name = gensym(:match!_ac)
+
+    nlinear = length(A.linear_variables)
+    naliens = length(A.alien_subterms)
+
+    body = if naliens == 0
+        :(_match_ac_0($A, args, σ))
+    elseif naliens == 1
+        :(_match_ac_1($A, args, σ))
+    else
+        error("Unsupported state")
+    end
+
+    return fn_name, quote
+        function $fn_name(σ, t)
+            isa(t, $ACTerm) || return
+            t.root == $(Meta.quot(A.root)) || return
+
+            args = _match_ac_args($A, t)
+            args === nothing && return
+
+            nargs = sum(values(args))
+            nargs ≥ $(nlinear + naliens) || return
+
+            $body
+        end
+    end
 end
 
 
@@ -192,19 +238,48 @@ end
 rewriter(::ACTheory) = ACRewriter(Dict{Σ,Vector{Pair{ACMatcherSC,Any}}}())
 function Base.push!(rw::ACRewriter, (p, b)::Pair{ACTerm})
     haskey(rw.rules, p.root) || (rw.rules[p.root] = Pair{ACMatcherSC,Any}[])
-    push!(rw.rules[p.root], compile(p) => b)
+    push!(rw.rules[p.root], matcher(p) => b)
     rw
 end
 
-function rewrite(rw::ACRewriter, t::ACTerm)
-    haskey(rw.rules, t.root) || return nothing
+function compile(rw::ACRewriter)
+    fn_name = gensym(:rewrite_ac)
 
-    for (pattern, builder) ∈ rw.rules[t.root]
-        next = iterate(match(pattern, t))
-        next === nothing && continue
-        σ = next[1]
-        return builder(σ)::AbstractTerm
+    matcher_exprs = Expr[]
+
+    rules = Dict()
+    for (root, matchers) ∈ rw.rules
+        rules[root] = []
+        for (p, b) ∈ matchers
+            fn, expr = compile(p)
+            push!(matcher_exprs, expr)
+            push!(rules[root], fn => b)
+        end
     end
 
-    return nothing
+    index = gensym(:rewrite_ac_map)
+
+    fn_name, quote
+        $(matcher_exprs...)
+        $index = Dict($((
+            :($(Meta.quot(root)) => $(:([$((:($fn => $b) for (fn, b) ∈ rs)...)])))
+            for (root, rs) ∈ rules
+        )...))
+        function $fn_name(t)
+            $haskey($rules, t.root) || return
+
+            σ = $Substitution()
+
+            for (match_fn, builder) ∈ $index[t.root]
+                m = match_fn(σ, t)
+                m === nothing && continue
+                next = iterate($Matches(σ, m))
+                next === nothing && continue
+                σ = next[1]
+                return builder(σ)::$AbstractTerm
+            end
+
+            return
+        end
+    end
 end

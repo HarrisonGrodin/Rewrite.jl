@@ -76,6 +76,7 @@ function _match_c!(subproblems, σ, s, t, α, β)
     nothing
 end
 function match!(σ, A::CMatcher, t::CTerm)
+    isa(t, CTerm) || return nothing
     A.root == t.root || return nothing
 
     subproblems = Tuple{Substitution,Tuple{AbstractSubproblem,AbstractSubproblem}}[]
