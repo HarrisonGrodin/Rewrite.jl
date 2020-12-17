@@ -40,11 +40,15 @@ end
 
 function Base.show(io::IO, t::Union{Variable, AbstractTerm})
     term_expr = convert(Expr, t)
-    Base.show_call(io, :call, Symbol("@term"), [term_expr], 0)
+    @static if VERSION > v"1.3"
+        Base.show_call(io, :call, Symbol("@term"), [term_expr], 0, 0, false)
+    else
+        Base.show_call(io, :call, Symbol("@term"), [term_expr], 0)
+    end
 end
 
 macro term(expr)
-    :(_to_theory(THEORY, $(Meta.quot(expr))))
+    :(_to_theory(THEORY, $(esc(Meta.quot(expr)))))
 end
 
 
@@ -91,5 +95,5 @@ end
 
 
 macro rewrite(rw, expr)
-    :($(esc(rw))(_to_theory(THEORY, $(Meta.quot(expr)))))
+    :($(esc(rw))(_to_theory(THEORY, $(esc(Meta.quot(expr))))))
 end
